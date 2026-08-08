@@ -14,6 +14,121 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_links: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_links_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "app_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          detail: string | null
+          id: string
+          login: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          login?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          login?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_accounts: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          first_login_at: string | null
+          full_name: string | null
+          group_id: string | null
+          id: string
+          kind: string
+          last_seen_at: string | null
+          login: string
+          password: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          first_login_at?: string | null
+          full_name?: string | null
+          group_id?: string | null
+          id?: string
+          kind?: string
+          last_seen_at?: string | null
+          login: string
+          password: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          first_login_at?: string | null
+          full_name?: string | null
+          group_id?: string | null
+          id?: string
+          kind?: string
+          last_seen_at?: string | null
+          login?: string
+          password?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_accounts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignment_completions: {
         Row: {
           assignment_id: string
@@ -208,33 +323,74 @@ export type Database = {
           },
         ]
       }
+      group_messages: {
+        Row: {
+          body: string
+          created_at: string
+          group_id: string | null
+          id: string
+          teacher_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          teacher_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       groups: {
         Row: {
           archived: boolean
+          capacity: number
           created_at: string
+          finished_at: string | null
           id: string
           join_code: string
           lesson_days: number[]
+          lesson_time: string | null
           name: string
           teacher_id: string
           updated_at: string
         }
         Insert: {
           archived?: boolean
+          capacity?: number
           created_at?: string
+          finished_at?: string | null
           id?: string
           join_code: string
           lesson_days?: number[]
+          lesson_time?: string | null
           name: string
           teacher_id: string
           updated_at?: string
         }
         Update: {
           archived?: boolean
+          capacity?: number
           created_at?: string
+          finished_at?: string | null
           id?: string
           join_code?: string
           lesson_days?: number[]
+          lesson_time?: string | null
           name?: string
           teacher_id?: string
           updated_at?: string
@@ -300,6 +456,44 @@ export type Database = {
           wrong_answer?: string | null
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          group_id: string | null
+          id: string
+          read: boolean
+          recipient_id: string
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          read?: boolean
+          recipient_id: string
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          read?: boolean
+          recipient_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -624,6 +818,57 @@ export type Database = {
         Returns: {
           cnt: number
           tag: string
+        }[]
+      }
+      teacher_groups_overview: {
+        Args: never
+        Returns: {
+          active_7: number
+          active_today: number
+          archived: boolean
+          at_risk: number
+          avg_accuracy: number
+          avg_streak: number
+          group_id: string
+          join_code: string
+          lesson_days: number[]
+          name: string
+          students: number
+        }[]
+      }
+      teacher_student_activity: {
+        Args: { _days?: number; _sid: string }
+        Returns: {
+          active: number
+          day: string
+          learned: number
+          mistakes: number
+        }[]
+      }
+      teacher_student_mistakes: {
+        Args: { _limit?: number; _sid: string }
+        Returns: {
+          correct_answer: string
+          created_at: string
+          explanation: string
+          question: string
+          skill: string
+          tag: string
+          wrong_answer: string
+        }[]
+      }
+      teacher_weekly_report: {
+        Args: { _gid: string }
+        Returns: {
+          active_students: number
+          assignments_done: number
+          assignments_total: number
+          best_student: string
+          learned_words: number
+          new_mistakes: number
+          students: number
+          total_active_days: number
+          weakest_topic: string
         }[]
       }
       teaches_student: {
