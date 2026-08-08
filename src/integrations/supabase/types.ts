@@ -14,6 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_completions: {
+        Row: {
+          assignment_id: string
+          completed_at: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          assignment_id: string
+          completed_at?: string
+          id?: string
+          student_id?: string
+        }
+        Update: {
+          assignment_id?: string
+          completed_at?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_completions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          created_at: string
+          due_date: string | null
+          group_id: string
+          id: string
+          level: string
+          note: string | null
+          target_student_id: string | null
+          teacher_id: string
+          title: string
+          topic: string | null
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string | null
+          group_id: string
+          id?: string
+          level?: string
+          note?: string | null
+          target_student_id?: string | null
+          teacher_id: string
+          title: string
+          topic?: string | null
+        }
+        Update: {
+          created_at?: string
+          due_date?: string | null
+          group_id?: string
+          id?: string
+          level?: string
+          note?: string | null
+          target_student_id?: string | null
+          teacher_id?: string
+          title?: string
+          topic?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      curriculum_entries: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          notes: string | null
+          planned_date: string | null
+          position: number
+          taught_at: string | null
+          teacher_id: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          notes?: string | null
+          planned_date?: string | null
+          position?: number
+          taught_at?: string | null
+          teacher_id: string
+          topic: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          notes?: string | null
+          planned_date?: string | null
+          position?: number
+          taught_at?: string | null
+          teacher_id?: string
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curriculum_entries_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_progress: {
         Row: {
           day: string
@@ -56,6 +176,68 @@ export type Database = {
           created_at?: string
           id?: string
           label?: string | null
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          student_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          student_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          archived: boolean
+          created_at: string
+          id: string
+          join_code: string
+          lesson_days: number[]
+          name: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          join_code: string
+          lesson_days?: number[]
+          name: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          join_code?: string
+          lesson_days?: number[]
+          name?: string
+          teacher_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -203,6 +385,65 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_materials: {
+        Row: {
+          content: string
+          created_at: string
+          group_id: string | null
+          id: string
+          kind: string
+          teacher_id: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind?: string
+          teacher_id: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind?: string
+          teacher_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_materials_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       vocab_bank: {
         Row: {
           cefr: string
@@ -295,10 +536,103 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_group: {
+        Args: { _lesson_days?: number[]; _name: string }
+        Returns: {
+          id: string
+          join_code: string
+          name: string
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { _gid: string; _uid: string }
+        Returns: boolean
+      }
+      is_group_teacher: {
+        Args: { _gid: string; _uid: string }
+        Returns: boolean
+      }
+      join_group_by_code: {
+        Args: { _code: string }
+        Returns: {
+          group_id: string
+          group_name: string
+        }[]
+      }
+      my_group: {
+        Args: never
+        Returns: {
+          group_id: string
+          group_name: string
+          joined_at: string
+          lesson_days: number[]
+          members_count: number
+          teacher_name: string
+        }[]
+      }
+      teacher_group_activity: {
+        Args: { _days?: number; _gid: string }
+        Returns: {
+          active: number
+          day: string
+          mistakes: number
+        }[]
+      }
+      teacher_group_students: {
+        Args: { _gid: string }
+        Returns: {
+          accuracy: number
+          active_30: number
+          active_7: number
+          assignments_done: number
+          assignments_total: number
+          best_streak: number
+          joined_at: string
+          last_visit: string
+          learned_count: number
+          level_chosen: string
+          mistakes_7: number
+          mistakes_count: number
+          mistakes_prev_7: number
+          name: string
+          self_days_14: number
+          streak: number
+          student_id: string
+        }[]
+      }
+      teacher_group_summary: {
+        Args: { _gid: string }
+        Returns: {
+          active_7: number
+          active_today: number
+          at_risk: number
+          avg_accuracy: number
+          avg_streak: number
+          top_mistake_tag: string
+          total_students: number
+        }[]
+      }
+      teacher_group_top_mistakes: {
+        Args: { _gid: string; _limit?: number }
+        Returns: {
+          cnt: number
+          tag: string
+        }[]
+      }
+      teaches_student: {
+        Args: { _sid: string; _uid: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "student" | "teacher" | "school_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -425,6 +759,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["student", "teacher", "school_admin"],
+    },
   },
 } as const
