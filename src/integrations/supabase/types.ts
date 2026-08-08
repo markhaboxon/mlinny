@@ -14,7 +14,282 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_progress: {
+        Row: {
+          day: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          day: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          day?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gemini_keys: {
+        Row: {
+          active: boolean
+          added_by: string | null
+          api_key: string
+          created_at: string
+          id: string
+          label: string | null
+        }
+        Insert: {
+          active?: boolean
+          added_by?: string | null
+          api_key: string
+          created_at?: string
+          id?: string
+          label?: string | null
+        }
+        Update: {
+          active?: boolean
+          added_by?: string | null
+          api_key?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+        }
+        Relationships: []
+      }
+      learned_words: {
+        Row: {
+          created_at: string
+          id: string
+          translation: string | null
+          user_id: string
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          translation?: string | null
+          user_id: string
+          word: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          translation?: string | null
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
+      mistakes: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          explanation: string | null
+          id: string
+          question: string
+          skill: string | null
+          tag: string | null
+          user_id: string
+          wrong_answer: string | null
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          question: string
+          skill?: string | null
+          tag?: string | null
+          user_id: string
+          wrong_answer?: string | null
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          question?: string
+          skill?: string | null
+          tag?: string | null
+          user_id?: string
+          wrong_answer?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          best_streak: number
+          created_at: string
+          daily_word_count: number
+          difficulty: string
+          email: string | null
+          gender: string | null
+          last_view: string | null
+          last_visit: string | null
+          level_chosen: string | null
+          linny_intro_seen: boolean
+          name: string | null
+          onboarded: boolean
+          placement_count: number | null
+          placement_score: number | null
+          placement_stars: number | null
+          streak: number
+          theme: string
+          updated_at: string
+          user_id: string
+          vocab_bank_ready: boolean
+          vocab_last_generated: string | null
+          vocab_last_test_date: string | null
+          vocab_setup_done: boolean
+          vocab_source: string | null
+        }
+        Insert: {
+          age?: number | null
+          best_streak?: number
+          created_at?: string
+          daily_word_count?: number
+          difficulty?: string
+          email?: string | null
+          gender?: string | null
+          last_view?: string | null
+          last_visit?: string | null
+          level_chosen?: string | null
+          linny_intro_seen?: boolean
+          name?: string | null
+          onboarded?: boolean
+          placement_count?: number | null
+          placement_score?: number | null
+          placement_stars?: number | null
+          streak?: number
+          theme?: string
+          updated_at?: string
+          user_id: string
+          vocab_bank_ready?: boolean
+          vocab_last_generated?: string | null
+          vocab_last_test_date?: string | null
+          vocab_setup_done?: boolean
+          vocab_source?: string | null
+        }
+        Update: {
+          age?: number | null
+          best_streak?: number
+          created_at?: string
+          daily_word_count?: number
+          difficulty?: string
+          email?: string | null
+          gender?: string | null
+          last_view?: string | null
+          last_visit?: string | null
+          level_chosen?: string | null
+          linny_intro_seen?: boolean
+          name?: string | null
+          onboarded?: boolean
+          placement_count?: number | null
+          placement_score?: number | null
+          placement_stars?: number | null
+          streak?: number
+          theme?: string
+          updated_at?: string
+          user_id?: string
+          vocab_bank_ready?: boolean
+          vocab_last_generated?: string | null
+          vocab_last_test_date?: string | null
+          vocab_setup_done?: boolean
+          vocab_source?: string | null
+        }
+        Relationships: []
+      }
+      vocab_bank: {
+        Row: {
+          cefr: string
+          created_at: string
+          id: string
+          level_rank: number
+          position: number
+          translation: string | null
+          used: boolean
+          user_id: string
+          word: string
+        }
+        Insert: {
+          cefr?: string
+          created_at?: string
+          id?: string
+          level_rank?: number
+          position?: number
+          translation?: string | null
+          used?: boolean
+          user_id: string
+          word: string
+        }
+        Update: {
+          cefr?: string
+          created_at?: string
+          id?: string
+          level_rank?: number
+          position?: number
+          translation?: string | null
+          used?: boolean
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
+      vocab_words: {
+        Row: {
+          assigned_date: string
+          created_at: string
+          example: string | null
+          example_uz: string | null
+          favorited_at: string | null
+          id: string
+          is_favorite: boolean
+          learned_at: string | null
+          pronunciation: string | null
+          status: string
+          topic: string | null
+          translation: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          assigned_date: string
+          created_at?: string
+          example?: string | null
+          example_uz?: string | null
+          favorited_at?: string | null
+          id?: string
+          is_favorite?: boolean
+          learned_at?: string | null
+          pronunciation?: string | null
+          status?: string
+          topic?: string | null
+          translation: string
+          user_id?: string
+          word: string
+        }
+        Update: {
+          assigned_date?: string
+          created_at?: string
+          example?: string | null
+          example_uz?: string | null
+          favorited_at?: string | null
+          id?: string
+          is_favorite?: boolean
+          learned_at?: string | null
+          pronunciation?: string | null
+          status?: string
+          topic?: string | null
+          translation?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
