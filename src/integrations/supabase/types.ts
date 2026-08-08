@@ -85,7 +85,6 @@ export type Database = {
           kind: string
           last_seen_at: string | null
           login: string
-          password: string
           updated_at: string
           user_id: string | null
         }
@@ -100,7 +99,6 @@ export type Database = {
           kind?: string
           last_seen_at?: string | null
           login: string
-          password: string
           updated_at?: string
           user_id?: string | null
         }
@@ -115,7 +113,6 @@ export type Database = {
           kind?: string
           last_seen_at?: string | null
           login?: string
-          password?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -204,6 +201,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      bot_jobs: {
+        Row: {
+          job_key: string
+          ran_at: string
+        }
+        Insert: {
+          job_key: string
+          ran_at?: string
+        }
+        Update: {
+          job_key?: string
+          ran_at?: string
+        }
+        Relationships: []
       }
       curriculum_entries: {
         Row: {
@@ -514,6 +526,11 @@ export type Database = {
           placement_score: number | null
           placement_stars: number | null
           streak: number
+          telegram_id: number | null
+          telegram_linked_at: string | null
+          telegram_username: string | null
+          tg_daily_hour: number
+          tg_reminders: boolean
           theme: string
           updated_at: string
           user_id: string
@@ -541,6 +558,11 @@ export type Database = {
           placement_score?: number | null
           placement_stars?: number | null
           streak?: number
+          telegram_id?: number | null
+          telegram_linked_at?: string | null
+          telegram_username?: string | null
+          tg_daily_hour?: number
+          tg_reminders?: boolean
           theme?: string
           updated_at?: string
           user_id: string
@@ -568,6 +590,11 @@ export type Database = {
           placement_score?: number | null
           placement_stars?: number | null
           streak?: number
+          telegram_id?: number | null
+          telegram_linked_at?: string | null
+          telegram_username?: string | null
+          tg_daily_hour?: number
+          tg_reminders?: boolean
           theme?: string
           updated_at?: string
           user_id?: string
@@ -578,6 +605,44 @@ export type Database = {
           vocab_source?: string | null
         }
         Relationships: []
+      }
+      scheduled_messages: {
+        Row: {
+          body: string
+          created_at: string
+          group_id: string | null
+          id: string
+          send_at: string
+          sent_at: string | null
+          teacher_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          send_at: string
+          sent_at?: string | null
+          teacher_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          send_at?: string
+          sent_at?: string | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_materials: {
         Row: {
@@ -616,6 +681,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      telegram_links: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      telegram_state: {
+        Row: {
+          chat_id: number
+          data: Json
+          updated_at: string
+        }
+        Insert: {
+          chat_id: number
+          data?: Json
+          updated_at?: string
+        }
+        Update: {
+          chat_id?: number
+          data?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      telegram_updates: {
+        Row: {
+          created_at: string
+          update_id: number
+        }
+        Insert: {
+          created_at?: string
+          update_id: number
+        }
+        Update: {
+          created_at?: string
+          update_id?: number
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
