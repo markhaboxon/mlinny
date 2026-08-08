@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import ApiKeyDialog from "../components/ApiKeyDialog";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -45,27 +46,41 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Sahifa yuklanmadi
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Kichik xatolik yuz berdi. "Qayta urinish"ni bosing — yoki holatni tozalab boshidan
+          boshlang.
         </p>
+
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
               router.invalidate();
               reset();
+              // A plain reset often re-throws the same error; a hard reload
+              // rebuilds all client state and actually recovers.
+              setTimeout(() => window.location.reload(), 50);
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Qayta urinish
           </button>
-          <a
-            href="/"
+          <button
+            onClick={() => {
+              try {
+                localStorage.removeItem("linny_view_v1");
+                localStorage.removeItem("linny_last_result_v1");
+              } catch {
+                /* ignore */
+              }
+              window.location.replace("/");
+            }}
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
-          </a>
+            Boshidan boshlash
+          </button>
+
         </div>
       </div>
     </div>
@@ -77,19 +92,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Linny — Ingliz tilini o'rganish" },
+      { name: "description", content: "New Round-Up mashqlari va shaxsiy darslar bilan ingliz tilini o'rganing." },
+      { name: "author", content: "Linny" },
+      { property: "og:title", content: "Linny — Ingliz tilini o'rganish" },
+      { property: "og:description", content: "New Round-Up mashqlari va shaxsiy darslar bilan ingliz tilini o'rganing." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -108,17 +128,21 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <ApiKeyDialog />
         <Scripts />
       </body>
     </html>
   );
 }
 
+import SignOutButton from "@/components/SignOutButton";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SignOutButton />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

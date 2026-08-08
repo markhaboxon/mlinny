@@ -1,0 +1,1 @@
+ALTER TABLE public.app_accounts DROP COLUMN IF EXISTS password;
