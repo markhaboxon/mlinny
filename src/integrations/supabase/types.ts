@@ -73,6 +73,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_daily: {
+        Row: {
+          day: string
+          kind: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          day?: string
+          kind: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          day?: string
+          kind?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_accounts: {
         Row: {
           active: boolean
@@ -217,6 +238,30 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       curriculum_entries: {
         Row: {
           created_at: string
@@ -276,6 +321,57 @@ export type Database = {
           day?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      duel_matches: {
+        Row: {
+          created_at: string
+          id: string
+          is_bot: boolean
+          p1: string
+          p1_done: boolean
+          p1_name: string | null
+          p1_score: number
+          p2: string | null
+          p2_done: boolean
+          p2_name: string | null
+          p2_score: number
+          questions: Json
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_bot?: boolean
+          p1: string
+          p1_done?: boolean
+          p1_name?: string | null
+          p1_score?: number
+          p2?: string | null
+          p2_done?: boolean
+          p2_name?: string | null
+          p2_score?: number
+          questions?: Json
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_bot?: boolean
+          p1?: string
+          p1_done?: boolean
+          p1_name?: string | null
+          p1_score?: number
+          p2?: string | null
+          p2_done?: boolean
+          p2_name?: string | null
+          p2_score?: number
+          questions?: Json
+          started_at?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -409,6 +505,36 @@ export type Database = {
         }
         Relationships: []
       }
+      league_history: {
+        Row: {
+          created_at: string
+          id: string
+          league: string
+          result: string
+          user_id: string
+          week_start: string
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          league: string
+          result: string
+          user_id: string
+          week_start: string
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          league?: string
+          result?: string
+          user_id?: string
+          week_start?: string
+          xp?: number
+        }
+        Relationships: []
+      }
       learned_words: {
         Row: {
           created_at: string
@@ -510,14 +636,19 @@ export type Database = {
       profiles: {
         Row: {
           age: number | null
+          avatar_code: string | null
           best_streak: number
+          coins: number
           created_at: string
           daily_word_count: number
           difficulty: string
           email: string | null
           gender: string | null
+          last_freeze_used: string | null
+          last_streak_reward: number
           last_view: string | null
           last_visit: string | null
+          league: string
           level_chosen: string | null
           linny_intro_seen: boolean
           name: string | null
@@ -526,12 +657,15 @@ export type Database = {
           placement_score: number | null
           placement_stars: number | null
           streak: number
+          streak_freezes: number
           telegram_id: number | null
           telegram_linked_at: string | null
           telegram_username: string | null
           tg_daily_hour: number
           tg_reminders: boolean
           theme: string
+          theme_code: string | null
+          total_xp: number
           updated_at: string
           user_id: string
           vocab_bank_ready: boolean
@@ -539,17 +673,23 @@ export type Database = {
           vocab_last_test_date: string | null
           vocab_setup_done: boolean
           vocab_source: string | null
+          weekly_xp: number
         }
         Insert: {
           age?: number | null
+          avatar_code?: string | null
           best_streak?: number
+          coins?: number
           created_at?: string
           daily_word_count?: number
           difficulty?: string
           email?: string | null
           gender?: string | null
+          last_freeze_used?: string | null
+          last_streak_reward?: number
           last_view?: string | null
           last_visit?: string | null
+          league?: string
           level_chosen?: string | null
           linny_intro_seen?: boolean
           name?: string | null
@@ -558,12 +698,15 @@ export type Database = {
           placement_score?: number | null
           placement_stars?: number | null
           streak?: number
+          streak_freezes?: number
           telegram_id?: number | null
           telegram_linked_at?: string | null
           telegram_username?: string | null
           tg_daily_hour?: number
           tg_reminders?: boolean
           theme?: string
+          theme_code?: string | null
+          total_xp?: number
           updated_at?: string
           user_id: string
           vocab_bank_ready?: boolean
@@ -571,17 +714,23 @@ export type Database = {
           vocab_last_test_date?: string | null
           vocab_setup_done?: boolean
           vocab_source?: string | null
+          weekly_xp?: number
         }
         Update: {
           age?: number | null
+          avatar_code?: string | null
           best_streak?: number
+          coins?: number
           created_at?: string
           daily_word_count?: number
           difficulty?: string
           email?: string | null
           gender?: string | null
+          last_freeze_used?: string | null
+          last_streak_reward?: number
           last_view?: string | null
           last_visit?: string | null
+          league?: string
           level_chosen?: string | null
           linny_intro_seen?: boolean
           name?: string | null
@@ -590,12 +739,15 @@ export type Database = {
           placement_score?: number | null
           placement_stars?: number | null
           streak?: number
+          streak_freezes?: number
           telegram_id?: number | null
           telegram_linked_at?: string | null
           telegram_username?: string | null
           tg_daily_hour?: number
           tg_reminders?: boolean
           theme?: string
+          theme_code?: string | null
+          total_xp?: number
           updated_at?: string
           user_id?: string
           vocab_bank_ready?: boolean
@@ -603,6 +755,7 @@ export type Database = {
           vocab_last_test_date?: string | null
           vocab_setup_done?: boolean
           vocab_source?: string | null
+          weekly_xp?: number
         }
         Relationships: []
       }
@@ -637,6 +790,201 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "scheduled_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_items: {
+        Row: {
+          active: boolean
+          code: string
+          description: string | null
+          emoji: string | null
+          kind: string
+          payload: string | null
+          price: number
+          sort: number
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          description?: string | null
+          emoji?: string | null
+          kind: string
+          payload?: string | null
+          price: number
+          sort?: number
+          title: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          description?: string | null
+          emoji?: string | null
+          kind?: string
+          payload?: string | null
+          price?: number
+          sort?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      story_scenarios: {
+        Row: {
+          active: boolean
+          code: string
+          description: string | null
+          emoji: string | null
+          id: string
+          level: string
+          seed_prompt: string
+          sort: number
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          level?: string
+          seed_prompt: string
+          sort?: number
+          title: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          level?: string
+          seed_prompt?: string
+          sort?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      story_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          scenario_code: string
+          status: string
+          turns: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          scenario_code: string
+          status?: string
+          turns?: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          scenario_code?: string
+          status?: string
+          turns?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_sessions_scenario_code_fkey"
+            columns: ["scenario_code"]
+            isOneToOne: false
+            referencedRelation: "story_scenarios"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      story_turns: {
+        Row: {
+          choices: Json
+          created_at: string
+          grammar_note: string | null
+          id: string
+          role: string
+          session_id: string
+          text: string
+          translation: string | null
+          user_id: string
+        }
+        Insert: {
+          choices?: Json
+          created_at?: string
+          grammar_note?: string | null
+          id?: string
+          role: string
+          session_id: string
+          text: string
+          translation?: string | null
+          user_id?: string
+        }
+        Update: {
+          choices?: Json
+          created_at?: string
+          grammar_note?: string | null
+          id?: string
+          role?: string
+          session_id?: string
+          text?: string
+          translation?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_turns_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "story_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submissions: {
+        Row: {
+          ai_feedback: Json | null
+          ai_score: number | null
+          content: string
+          created_at: string
+          group_id: string | null
+          id: string
+          kind: string
+          prompt: string | null
+          student_id: string
+        }
+        Insert: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          content: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind: string
+          prompt?: string | null
+          student_id?: string
+        }
+        Update: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          content?: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind?: string
+          prompt?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
@@ -741,6 +1089,35 @@ export type Database = {
           update_id?: number
         }
         Relationships: []
+      }
+      user_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          item_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_code?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_purchases_item_code_fkey"
+            columns: ["item_code"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -855,6 +1232,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_progress: {
+        Args: { _coins: number; _reason: string; _xp: number }
+        Returns: {
+          coins: number
+          league: string
+          total_xp: number
+          weekly_xp: number
+        }[]
+      }
+      buy_shop_item: { Args: { _code: string }; Returns: Json }
+      consume_ai_quota: {
+        Args: { _kind: string; _limit: number }
+        Returns: Json
+      }
       create_group: {
         Args: { _lesson_days?: number[]; _name: string }
         Returns: {
@@ -863,6 +1254,20 @@ export type Database = {
           name: string
         }[]
       }
+      duel_attach_bot: { Args: { _match: string }; Returns: boolean }
+      duel_bot_score: {
+        Args: { _finished: boolean; _match: string; _score: number }
+        Returns: undefined
+      }
+      duel_find_match: {
+        Args: { _name: string; _questions: Json }
+        Returns: string
+      }
+      duel_report: {
+        Args: { _finished: boolean; _match: string; _score: number }
+        Returns: Json
+      }
+      equip_shop_item: { Args: { _code: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -885,6 +1290,16 @@ export type Database = {
           group_name: string
         }[]
       }
+      league_board: {
+        Args: never
+        Returns: {
+          avatar: string
+          is_me: boolean
+          name: string
+          user_id: string
+          weekly_xp: number
+        }[]
+      }
       my_group: {
         Args: never
         Returns: {
@@ -896,6 +1311,7 @@ export type Database = {
           teacher_name: string
         }[]
       }
+      run_league_rollover: { Args: never; Returns: undefined }
       teacher_group_activity: {
         Args: { _days?: number; _gid: string }
         Returns: {
@@ -1000,6 +1416,7 @@ export type Database = {
         Args: { _sid: string; _uid: string }
         Returns: boolean
       }
+      touch_daily_progress: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "student" | "teacher" | "school_admin"
