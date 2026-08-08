@@ -10,33 +10,168 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GroupRouteImport } from './routes/group'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminSetupRouteImport } from './routes/admin/setup'
+import { Route as EnterTokenRouteImport } from './routes/enter.$token'
+import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
+import { Route as TeacherGroupIdRouteImport } from './routes/teacher/$groupId'
+import { Route as TeacherStudentStudentIdRouteImport } from './routes/teacher/student.$studentId'
+import { Route as ApiPublicTelegramCronRouteImport } from './routes/api/public/telegram/cron'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupRoute = GroupRouteImport.update({
+  id: '/group',
+  path: '/group',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSetupRoute = AdminSetupRouteImport.update({
+  id: '/admin/setup',
+  path: '/admin/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnterTokenRoute = EnterTokenRouteImport.update({
+  id: '/enter/$token',
+  path: '/enter/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherIndexRoute = TeacherIndexRouteImport.update({
+  id: '/teacher/',
+  path: '/teacher/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherGroupIdRoute = TeacherGroupIdRouteImport.update({
+  id: '/teacher/$groupId',
+  path: '/teacher/$groupId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherStudentStudentIdRoute = TeacherStudentStudentIdRouteImport.update({
+  id: '/teacher/student/$studentId',
+  path: '/teacher/student/$studentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTelegramCronRoute = ApiPublicTelegramCronRouteImport.update({
+  id: '/api/public/telegram/cron',
+  path: '/api/public/telegram/cron',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTelegramWebhookRoute =
+  ApiPublicTelegramWebhookRouteImport.update({
+    id: '/api/public/telegram/webhook',
+    path: '/api/public/telegram/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/group': typeof GroupRoute
+  '/admin/setup': typeof AdminSetupRoute
+  '/enter/$token': typeof EnterTokenRoute
+  '/teacher/$groupId': typeof TeacherGroupIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/teacher/': typeof TeacherIndexRoute
+  '/teacher/student/$studentId': typeof TeacherStudentStudentIdRoute
+  '/api/public/telegram/cron': typeof ApiPublicTelegramCronRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/group': typeof GroupRoute
+  '/admin/setup': typeof AdminSetupRoute
+  '/enter/$token': typeof EnterTokenRoute
+  '/teacher/$groupId': typeof TeacherGroupIdRoute
+  '/admin': typeof AdminIndexRoute
+  '/teacher': typeof TeacherIndexRoute
+  '/teacher/student/$studentId': typeof TeacherStudentStudentIdRoute
+  '/api/public/telegram/cron': typeof ApiPublicTelegramCronRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/group': typeof GroupRoute
+  '/admin/setup': typeof AdminSetupRoute
+  '/enter/$token': typeof EnterTokenRoute
+  '/teacher/$groupId': typeof TeacherGroupIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/teacher/': typeof TeacherIndexRoute
+  '/teacher/student/$studentId': typeof TeacherStudentStudentIdRoute
+  '/api/public/telegram/cron': typeof ApiPublicTelegramCronRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/group'
+    | '/admin/setup'
+    | '/enter/$token'
+    | '/teacher/$groupId'
+    | '/admin/'
+    | '/teacher/'
+    | '/teacher/student/$studentId'
+    | '/api/public/telegram/cron'
+    | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/group'
+    | '/admin/setup'
+    | '/enter/$token'
+    | '/teacher/$groupId'
+    | '/admin'
+    | '/teacher'
+    | '/teacher/student/$studentId'
+    | '/api/public/telegram/cron'
+    | '/api/public/telegram/webhook'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/group'
+    | '/admin/setup'
+    | '/enter/$token'
+    | '/teacher/$groupId'
+    | '/admin/'
+    | '/teacher/'
+    | '/teacher/student/$studentId'
+    | '/api/public/telegram/cron'
+    | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  GroupRoute: typeof GroupRoute
+  AdminSetupRoute: typeof AdminSetupRoute
+  EnterTokenRoute: typeof EnterTokenRoute
+  TeacherGroupIdRoute: typeof TeacherGroupIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  TeacherIndexRoute: typeof TeacherIndexRoute
+  TeacherStudentStudentIdRoute: typeof TeacherStudentStudentIdRoute
+  ApiPublicTelegramCronRoute: typeof ApiPublicTelegramCronRoute
+  ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +183,92 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/group': {
+      id: '/group'
+      path: '/group'
+      fullPath: '/group'
+      preLoaderRoute: typeof GroupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/setup': {
+      id: '/admin/setup'
+      path: '/admin/setup'
+      fullPath: '/admin/setup'
+      preLoaderRoute: typeof AdminSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enter/$token': {
+      id: '/enter/$token'
+      path: '/enter/$token'
+      fullPath: '/enter/$token'
+      preLoaderRoute: typeof EnterTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/': {
+      id: '/teacher/'
+      path: '/teacher'
+      fullPath: '/teacher/'
+      preLoaderRoute: typeof TeacherIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/$groupId': {
+      id: '/teacher/$groupId'
+      path: '/teacher/$groupId'
+      fullPath: '/teacher/$groupId'
+      preLoaderRoute: typeof TeacherGroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/student/$studentId': {
+      id: '/teacher/student/$studentId'
+      path: '/teacher/student/$studentId'
+      fullPath: '/teacher/student/$studentId'
+      preLoaderRoute: typeof TeacherStudentStudentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/cron': {
+      id: '/api/public/telegram/cron'
+      path: '/api/public/telegram/cron'
+      fullPath: '/api/public/telegram/cron'
+      preLoaderRoute: typeof ApiPublicTelegramCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  GroupRoute: GroupRoute,
+  AdminSetupRoute: AdminSetupRoute,
+  EnterTokenRoute: EnterTokenRoute,
+  TeacherGroupIdRoute: TeacherGroupIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  TeacherIndexRoute: TeacherIndexRoute,
+  TeacherStudentStudentIdRoute: TeacherStudentStudentIdRoute,
+  ApiPublicTelegramCronRoute: ApiPublicTelegramCronRoute,
+  ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

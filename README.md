@@ -1,14 +1,24 @@
-# Welcome to your Lovable project
+# LearnLink Pro
+
+Qara, men lovable ai bilan bir sayt qimdim, va unga yana bir funksiya uchun promt berdim, ammo u bazi funksiyalarni men aytganday qilib bermadi, sen uni ko'rib chiq, agarda to'g'ri qilmagan bo'lsa to'g'rilab ber, men hozircha aniqlagan xato tizimga kirganda birinchi admin setup ga kirib login generation qilish kerak boladi. Men generatsiya qilganimdan keyin boshqa bu joydan login generatsiya qilib bo'lmaydi, men generatsiya qilganimdan keyin auth oynasiga qaytib u login hamda parol ni kiritsam u login hamda parol xato deyabdi, men qayta admin setup ga qaytib yangi login ham generatisya qila olmayman, bu yaxshi ammo xatolik berayotgani yomonda, shuni to'g'rilab ber, agarda boshqa xatolar bo'lsa ularni ham menga to'g'rilab ber, senga u lovable qilib bergan hozirgi faylni hamda unga yozgan promt ni ham senga aniqlash uchun yuboryabman: 
+
+iltimos endi menga iloji bo'lsa shu google orqali ro'yxatdan o'tish degan funksiyani tagi bilan hozir menga halaqit qilmaydigan qilib turgin, uni butunlay pauza qil, ammo o'chirib yuborma, keyinchalik yoqishim mumkin shuni ham hisobini ol.
+Endi savol kelishi mumkin, unda qaday qilib tizimga kiriladi desang, login va parol ni qo'lda yozish orqali. u login hamda parol ni qayerdan olishadi desang uni hozircha oddiy foydalanuvchilar uchun cheklov qo'yib turamiz, yani u qanday ishlaydi?
+U login parol ni admin tuzadi va uni boshqalarga beradi, Admin panelda hamma narsa chiqadi, ammo ingliz tilini o'rganishga doir o'rganish narsalari emas, u admin panelda butun saytni to'liq boshqaruv imkoniyatlari bo'ladi, shuni ham qo'shib berginki, admin login hamda parol yasab beradi dedimku, shuni yasab uni boshqa bir odam ga bersa va u foydalanuvchi tizimga kirsa, u qachon kirgani hozir saytga kirib undan foydalanayabdimi, hamma hamma malumotlari chiqib keladi, u nimalar qilayotganiacha aniq hisobot ham. Hatto ustoz role uchun ham admin login yasaydi,  va uni ustozga beradi, admin panelda yangi kirish qo'shish yoki shunga o'xshash turgam turadi, uni bossa yangi login hamda parol kiritish so'raladi, login hamda parol kiritilgandan keyin, yaratish degan tugma turadi, uni bossa u login hamda parol bazaga avtomatik srazi yozadi, keyin esa o'sha oynani o'zida yuborish degan tugma turadi, u tugmani bossa sayt avtomatik ravishda bir martalik link generatsiya qiadi, yuborishni bossa o'sha link generatsiya bo'ladi va avtomatik u link buferga nusxa olinadi va link nusxalandi degan habar chiqadi, keyin u link ni istalgan joydan boshqa odamga yuboradi, u odam o'sha link a kirsa undan login hamda parol so'ramasdan tizimga kirib ketadi, haa aytgancha admin shu login va parol generatsiya qilaotganda u foydalanuvchi kim ekanligini ham yozishi kerak, misol uchun yana bir adminmi, yoki ustoz, yoki o'quvchimi, belgilaydi, ustoz qlib belgilasa va u foydalanuvhi u link orqali kirsa o'sha ustoz bo'lib kiradi va hamma narsa hamda ustoz paneladi ham bo'ladi, foydalanuvchi bo'lib kirsa unda ustoz panel ham o'quvchi panel ham bo'lmaydi u faqat foydalanadi, ustoz guruhlarga yuboraayotgan xabarlarni ham ko'ra olmaydi, umuman olganda men ikkita ustoz login generatsiya qilgan bo'lsam va undan ustozlar krigan bo'lsa, keyin ular o'zi uchun guruhlarni tashkillab yani  yangi guruh ochish ni bosishsa undan guruh nomini so'raydi, va guruh nomini so'ragandan keyin qaysi vaqtda bo'lishini belgilaydi, undan so'ng esa nechta o'quvchi bo'lishini belgilaydi, eng muhim joyi shu yerda bo'ladi, yani ustoz nechta o'quvchi deb yozgan bo'lsa va yaratishni bossa sayt avtomatik ravishda o'zi o'sha o'quvchilar soniga mos login hamda parol ni generatsiya qilb beradi, ustoz ularni nusxa olib uni o'quvhilariga yuboradi, va o'quvchilar u saytga kirib olishadi, yani misol uchun ustoz 9 ta o'quvchi bor deb belgilasa u 9 ta generatsiya qilib bersa, unda ularin hammasini nusxa olib yuborib chiqish noqulay bo'lishi mumkin, shunga ulardan hammasini birga nusxa olish funksiyasi ham alohida bo'lsin yani ham alohida ham bittada nusxax olish mukmin bo'ladi, ammo bir muammo paydo bo'ladi, yani u ustoz hammasini misol uchun bitta teleram guruhga yuborsa va o'quvchilar u link orqali tizimga kirsa ikkita yoki undan ham ko'prog'i bitta link ga kirib qolsa unda umuman bo'lmaydi va u o'quvchilar u link orqali tizima kriishgandan keyin ulardan ism so'raladi va jins so'raladi, bo'ldi, ammo ikkinchisi ham u link orqali kirsa malumotlar chalkashadi, shuning uchun bitta login dan faqat bitta o'quvchi kirsa oladi, va shuni ham taminlab qo'yginki, agarda bitta o'quvchi bitta link ni bosib tizimga kirsa va o'sha huddi o'sha hisob dan yani google yoki boshqa hisobdan yana bir boshqa ink orqali kirib yuborsa unda siz avval tizimga kirgansiz deb o'zini linkidagi holatga yuboradi, ammo nima qilib bo'lsa ham qadaydir xatolik chiqib qolsa va ustoz 9ta genratsiya qilgan bo'lsa ham xato qilishlari mumkin kel shuning uchun bir narsa qilamiz,
+
+yani u o'quvchilar tizimga kirganida  ism so'raydiku, shu ism so'rganda va kiritishganda u qaysi link orqali kirganini biladi sayt, shu link orqali manashu ismdagi o'quvchi kirdi deb ustozga habar borishi kerak. admin yaratgan ustoz uchun link ham bir marta ishlaydi, yani ustoz u link orqali tizimga kirgan bo'lsa bo'ldi endi u link boshqa ishlamaydi, yani u link ni yana bir marta bossa siz allaqachon tizimga kirgansiz deydi, va agar xatolik bo'lsa admin bilan bog'laning deb yozuv bo'ladi va u yerda mening teleram hisobim hamda google hisobim bo'ladi,  telegram username=qiziqyabsizmi, google hisobim=akramxonsaidov01@gmail.com shulardan murojaat qilishlari mumkin bo'ladi, va adminga murajatt qilishsa keyin ustoz uchun berilgan loginni ustiga bir marta bosish orqali keyin yangilash degan tugmani bosish bilan admin ustoz uchun am yangi link beradi, ustz ham guruhini istalgancha o'ziga moslashtirishi, undagi odamlarni chiarib yuborishi, boshqa guruhga o'tkazishi, guruh uchun umuiy haar yuborishi, hamda butun u ustoz dars o'tadigan guruhlar uchun habar yuborishi umkin bo'ladi, keyin guruh bitirgandan keyin u guruhni bitirdi deb ham belgilainshi mumkin va u arxiv guruhlar ro'yxatiga tushadii, hozircha faqat shularni mukammal qilib qo'shib ber, boshqa narsalarni ertaga ko'rib chiqamiz, login qism ga ham etibor ber, keyn o'quvchilar ham ustozlar kabi bitta link ga bir mata kirish ishlaydi, boshqa kira olmaydi
 
 This project was built with [Lovable](https://lovable.dev).
 
+**Live app**: https://learntoenglish.lovable.app
+
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/035e097b-56cb-44ef-9b2f-19bc9601a5e6).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +30,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
