@@ -63,21 +63,26 @@ function MyGroupPage() {
   const listC = useServerFn(myCurriculum);
   const done = useServerFn(completeAssignment);
 
+  const isStudent = guard.state === "ok";
+
   const { data: group } = useQuery({
     queryKey: ["my-group"],
     queryFn: () => get() as Promise<GroupInfo | null>,
-    enabled: !!user,
+    enabled: !!user && isStudent,
+    retry: false,
   });
   const { data: assignments = [] } = useQuery({
     queryKey: ["my-assignments"],
     queryFn: () => listA() as Promise<AssignmentRow[]>,
-    enabled: !!group,
+    enabled: isStudent && !!group,
+    retry: false,
   });
   const { data: curriculum = [] } = useQuery({
     queryKey: ["my-curriculum"],
     queryFn: () =>
       listC() as Promise<{ topic: string; planned_date: string | null; taught_at: string | null }[]>,
-    enabled: !!group,
+    enabled: isStudent && !!group,
+    retry: false,
   });
 
   const joinMut = useMutation({
