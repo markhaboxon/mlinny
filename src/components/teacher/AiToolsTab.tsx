@@ -141,8 +141,8 @@ export default function AiToolsTab({ groupId, students }: Props) {
           >
             <option value="">Barcha o'quvchilar</option>
             {students.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name ?? s.id.slice(0, 8)}
+              <option key={s.student_id} value={s.student_id}>
+                {s.name ?? s.student_id.slice(0, 8)}
               </option>
             ))}
           </select>
