@@ -68,6 +68,7 @@ function GroupPage() {
   const { groupId } = Route.useParams();
   const user = useAuthUser();
   const guard = useRequireRole(["teacher"]);
+  const isTeacher = guard.state === "ok";
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("xulosa");
@@ -85,20 +86,28 @@ function GroupPage() {
   const { data: groups = [] } = useQuery({
     queryKey: ["groups-overview"],
     queryFn: () => fetchOverview() as Promise<GroupOverview[]>,
+   enabled: isTeacher,
+    retry: false,
   });
   const group = groups.find((g) => g.group_id === groupId);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students", groupId],
     queryFn: () => fetchStudents({ data: { groupId } }) as Promise<StudentRow[]>,
+   enabled: isTeacher,
+    retry: false,
   });
   const { data: summary } = useQuery({
     queryKey: ["summary", groupId],
     queryFn: () => fetchSummary({ data: { groupId } }) as Promise<Summary | null>,
+   enabled: isTeacher,
+    retry: false,
   });
   const { data: topMistakes = [] } = useQuery({
     queryKey: ["top-mistakes", groupId],
     queryFn: () => fetchTop({ data: { groupId } }) as Promise<{ tag: string; cnt: number }[]>,
+   enabled: isTeacher,
+    retry: false,
   });
   const { data: activity = [] } = useQuery({
     queryKey: ["activity", groupId, range],
@@ -106,6 +115,8 @@ function GroupPage() {
       fetchActivity({ data: { groupId, days: range } }) as Promise<
         { day: string; active: number; mistakes: number }[]
       >,
+   enabled: isTeacher,
+    retry: false,
   });
 
   const kickMut = useMutation({

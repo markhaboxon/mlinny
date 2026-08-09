@@ -30,6 +30,7 @@ export const Route = createFileRoute("/teacher/")({
 function TeacherHome() {
   const user = useAuthUser();
   const guard = useRequireRole(["teacher"]);
+  const isTeacher = guard.state === "ok";
   const navigate = useNavigate();
   const qc = useQueryClient();
   const overview = useServerFn(groupsOverview);
@@ -42,6 +43,8 @@ function TeacherHome() {
   const { data: groups = [], isLoading } = useQuery({
     queryKey: ["groups-overview"],
     queryFn: () => overview() as Promise<GroupOverview[]>,
+   enabled: isTeacher,
+    retry: false,
   });
 
   const addMut = useMutation({
