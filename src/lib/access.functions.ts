@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireTeacher } from "./role-middleware";
+
 import { z } from "zod";
 
 const KIND = z.enum(["admin", "teacher", "student", "user"]);
@@ -520,19 +522,30 @@ export const finishGroup = createServerFn({ method: "POST" })
  * ------------------------------------------------------------------ */
 
 export const sendGroupMessage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireTeacher])
   .inputValidator((d: unknown) =>
     z
       .object({ groupId: z.string().uuid().nullable().default(null), body: z.string().min(1).max(1000) })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    if (data.groupId) {
+      const { data: owned, error: ownErr } = await context.supabase
+        .from("groups")
+        .select("id")
+        .eq("id", data.groupId)
+        .eq("teacher_id", context.userId)
+        .maybeSingle();
+      if (ownErr) throw new Error(ownErr.message);
+      if (!owned) throw new Error("Ruxsat yo'q");
+    }
     const { error } = await context.supabase
       .from("group_messages")
       .insert({ teacher_id: context.userId, group_id: data.groupId, body: data.body });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const listGroupMessages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
