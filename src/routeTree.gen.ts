@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DuelRouteImport } from './routes/duel'
 import { Route as GroupRouteImport } from './routes/group'
 import { Route as LeagueRouteImport } from './routes/league'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as StoryRouteImport } from './routes/story'
+import { Route as WriteRouteImport } from './routes/write'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSetupRouteImport } from './routes/admin/setup'
 import { Route as EnterTokenRouteImport } from './routes/enter.$token'
@@ -33,6 +36,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DuelRoute = DuelRouteImport.update({
+  id: '/duel',
+  path: '/duel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GroupRoute = GroupRouteImport.update({
   id: '/group',
   path: '/group',
@@ -46,6 +54,16 @@ const LeagueRoute = LeagueRouteImport.update({
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoryRoute = StoryRouteImport.update({
+  id: '/story',
+  path: '/story',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WriteRoute = WriteRouteImport.update({
+  id: '/write',
+  path: '/write',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -93,9 +111,12 @@ const ApiPublicTelegramWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
   '/league': typeof LeagueRoute
   '/shop': typeof ShopRoute
+  '/story': typeof StoryRoute
+  '/write': typeof WriteRoute
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
   '/teacher/$groupId': typeof TeacherGroupIdRoute
@@ -108,9 +129,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
   '/league': typeof LeagueRoute
   '/shop': typeof ShopRoute
+  '/story': typeof StoryRoute
+  '/write': typeof WriteRoute
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
   '/teacher/$groupId': typeof TeacherGroupIdRoute
@@ -124,9 +148,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
   '/league': typeof LeagueRoute
   '/shop': typeof ShopRoute
+  '/story': typeof StoryRoute
+  '/write': typeof WriteRoute
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
   '/teacher/$groupId': typeof TeacherGroupIdRoute
@@ -141,9 +168,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/duel'
     | '/group'
     | '/league'
     | '/shop'
+    | '/story'
+    | '/write'
     | '/admin/setup'
     | '/enter/$token'
     | '/teacher/$groupId'
@@ -156,9 +186,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/duel'
     | '/group'
     | '/league'
     | '/shop'
+    | '/story'
+    | '/write'
     | '/admin/setup'
     | '/enter/$token'
     | '/teacher/$groupId'
@@ -171,9 +204,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/duel'
     | '/group'
     | '/league'
     | '/shop'
+    | '/story'
+    | '/write'
     | '/admin/setup'
     | '/enter/$token'
     | '/teacher/$groupId'
@@ -187,9 +223,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DuelRoute: typeof DuelRoute
   GroupRoute: typeof GroupRoute
   LeagueRoute: typeof LeagueRoute
   ShopRoute: typeof ShopRoute
+  StoryRoute: typeof StoryRoute
+  WriteRoute: typeof WriteRoute
   AdminSetupRoute: typeof AdminSetupRoute
   EnterTokenRoute: typeof EnterTokenRoute
   TeacherGroupIdRoute: typeof TeacherGroupIdRoute
@@ -216,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/duel': {
+      id: '/duel'
+      path: '/duel'
+      fullPath: '/duel'
+      preLoaderRoute: typeof DuelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/group': {
       id: '/group'
       path: '/group'
@@ -235,6 +281,20 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/story': {
+      id: '/story'
+      path: '/story'
+      fullPath: '/story'
+      preLoaderRoute: typeof StoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/write': {
+      id: '/write'
+      path: '/write'
+      fullPath: '/write'
+      preLoaderRoute: typeof WriteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -299,9 +359,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DuelRoute: DuelRoute,
   GroupRoute: GroupRoute,
   LeagueRoute: LeagueRoute,
   ShopRoute: ShopRoute,
+  StoryRoute: StoryRoute,
+  WriteRoute: WriteRoute,
   AdminSetupRoute: AdminSetupRoute,
   EnterTokenRoute: EnterTokenRoute,
   TeacherGroupIdRoute: TeacherGroupIdRoute,

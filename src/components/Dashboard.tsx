@@ -8,6 +8,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { openApiKeyDialog } from "@/components/ApiKeyDialog";
 import DailyGoalCard from "@/components/DailyGoalCard";
 import TelegramLinkCard from "@/components/TelegramLinkCard";
+import GameBar from "@/components/GameBar";
+
 
 interface Props {
   profile: Profile;
