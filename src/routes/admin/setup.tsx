@@ -66,7 +66,7 @@ function SetupPage() {
         {!isLoading && !data?.exists && !done && (
           <form onSubmit={submit} className="mt-6 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Bu sahifa faqat bir marta ishlaydi — birinchi admin yaratilgach yopiladi.
+              Bu sahifa faqat bir marta ishlaydi va sozlash kalitini talab qiladi.
             </p>
             <input
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
@@ -76,17 +76,28 @@ function SetupPage() {
             />
             <input
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              placeholder="Parol (kamida 6 belgi)"
+              placeholder="Parol (kamida 8 belgi)"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <input
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              placeholder="Sozlash kaliti (ADMIN_SETUP_SECRET)"
+              type="password"
+              autoComplete="off"
+              value={setupSecret}
+              onChange={(e) => setSetupSecret(e.target.value)}
+            />
             <button
               className="btn-primary w-full disabled:opacity-50"
-              disabled={busy || login.trim().length < 3 || password.length < 6}
+              disabled={
+                busy || login.trim().length < 3 || password.length < 8 || setupSecret.trim().length < 8
+              }
             >
               {busy ? "Yaratilmoqda..." : "Admin yaratish"}
             </button>
+
             {err && <div className="text-sm text-red-500">{err}</div>}
           </form>
         )}
