@@ -45,6 +45,7 @@ function StudentPage() {
   const { studentId } = Route.useParams();
   const user = useAuthUser();
   const guard = useRequireRole(["teacher"]);
+  const isTeacher = guard.state === "ok";
   const navigate = useNavigate();
   const router = useRouter();
   const [range, setRange] = useState(30);
@@ -58,10 +59,14 @@ function StudentPage() {
       act({ data: { studentId, days: range } }) as Promise<
         { day: string; active: number; mistakes: number; learned: number }[]
       >,
+   enabled: isTeacher,
+    retry: false,
   });
   const { data: mistakes = [], error } = useQuery({
     queryKey: ["student-mistakes", studentId],
     queryFn: () => mis({ data: { studentId } }) as Promise<MistakeRow[]>,
+   enabled: isTeacher,
+    retry: false,
   });
 
   if (guard.state !== "ok") {
