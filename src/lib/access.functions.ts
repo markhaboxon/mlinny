@@ -19,12 +19,29 @@ export const adminExists = createServerFn({ method: "GET" }).handler(async () =>
   return { exists: (count ?? 0) > 0 };
 });
 
-/** First-run only: creates the very first admin when none exists yet. */
+/**
+ * First-run only: creates the very first admin when none exists yet.
+ * Requires the server-side ADMIN_SETUP_SECRET so anonymous visitors cannot
+ * mint an admin account (even if the admin row is later deleted).
+ */
 export const bootstrapAdmin = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ login: z.string().min(3).max(32), password: z.string().min(6).max(72) }).parse(d),
+    z
+      .object({
+        login: z.string().min(3).max(32),
+        password: z.string().min(8).max(72),
+        setupSecret: z.string().min(1).max(200),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) => {
+    const expected = process.env["ADMIN_SETUP_SECRET"];
+    if (!expected || expected.length < 8) {
+      throw new Error("Sozlash o'chirilgan. Administrator bilan bog'laning.");
+    }
+    if (data.setupSecret !== expected) {
+      throw new Error("Sozlash kaliti noto'g'ri.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createAccount, logActivity } = await import("./access.server");
     const { count } = await supabaseAdmin
@@ -41,6 +58,7 @@ export const bootstrapAdmin = createServerFn({ method: "POST" })
     await logActivity(account.user_id, account.login, "admin_bootstrap");
     return { ok: true };
   });
+
 
 /**
  * One-time access link. Returns the credentials once so the browser can sign in;
