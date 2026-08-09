@@ -254,6 +254,7 @@ function GroupPage() {
               ["dastur", "Dars dasturi"],
               ["material", "Materiallar"],
               ["hisobot", "Hisobot"],
+              ["ai", "AI vositalar"],
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
