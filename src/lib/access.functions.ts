@@ -19,12 +19,29 @@ export const adminExists = createServerFn({ method: "GET" }).handler(async () =>
   return { exists: (count ?? 0) > 0 };
 });
 
-/** First-run only: creates the very first admin when none exists yet. */
+/**
+ * First-run only: creates the very first admin when none exists yet.
+ * Requires the server-side ADMIN_SETUP_SECRET so anonymous visitors cannot
+ * mint an admin account (even if the admin row is later deleted).
+ */
 export const bootstrapAdmin = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ login: z.string().min(3).max(32), password: z.string().min(6).max(72) }).parse(d),
+    z
+      .object({
+        login: z.string().min(3).max(32),
+        password: z.string().min(8).max(72),
+        setupSecret: z.string().min(1).max(200),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) => {
+    const expected = process.env["ADMIN_SETUP_SECRET"];
+    if (!expected || expected.length < 8) {
+      throw new Error("Sozlash o'chirilgan. Administrator bilan bog'laning.");
+    }
+    if (data.setupSecret !== expected) {
+      throw new Error("Sozlash kaliti noto'g'ri.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createAccount, logActivity } = await import("./access.server");
     const { count } = await supabaseAdmin
@@ -41,6 +58,7 @@ export const bootstrapAdmin = createServerFn({ method: "POST" })
     await logActivity(account.user_id, account.login, "admin_bootstrap");
     return { ok: true };
   });
+
 
 /**
  * One-time access link. Returns the credentials once so the browser can sign in;
@@ -620,60 +638,10 @@ export const markNotificationsRead = createServerFn({ method: "POST" })
   });
 
 /* ------------------------------------------------------------------ *
- * Default admin + credential change
+ * Credential change
  * ------------------------------------------------------------------ */
 
-/**
- * Standart 4 ta hisob — tizimda umuman hisob bo'lmasa bir marta yaratiladi.
- * Loginlar normalizatsiya qilinadi (apostrof olib tashlanadi), shuning uchun
- * `O'quvchi` ham, `oquvchi` ham bir xil hisobga olib boradi.
- */
-const DEFAULT_ACCOUNTS: {
-  login: string;
-  password: string;
-  kind: "admin" | "teacher" | "student" | "user";
-  fullName: string;
-}[] = [
-  { login: "adminlogini", password: "adminparoli", kind: "admin", fullName: "Admin" },
-  { login: "odam", password: "odamparoli", kind: "user", fullName: "Foydalanuvchi" },
-  { login: "Ustozcha", password: "Ustozchaparoli", kind: "teacher", fullName: "Ustoz" },
-  { login: "O'quvchi", password: "O'quvchiparoli", kind: "student", fullName: "O'quvchi" },
-];
 
-export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { createAccount, logActivity, normalizeLogin } = await import("./access.server");
-  // Bir marta ishlaydi: marker qo'yilgach standart hisoblar qayta tiklanmaydi.
-  const SEED_KEY = "default_accounts_seeded";
-  const { data: marker } = await supabaseAdmin
-    .from("bot_jobs")
-    .select("job_key")
-    .eq("job_key", SEED_KEY)
-    .maybeSingle();
-  if (marker) return { created: false };
-
-  let created = 0;
-  for (const def of DEFAULT_ACCOUNTS) {
-    const login = normalizeLogin(def.login);
-    const { data: exists } = await supabaseAdmin
-      .from("app_accounts")
-      .select("id")
-      .eq("login", login)
-      .maybeSingle();
-    if (exists) continue;
-    const { account } = await createAccount({
-      login,
-      password: def.password,
-      kind: def.kind,
-      fullName: def.fullName,
-      createdBy: null,
-    });
-    await logActivity(account.user_id, account.login, "default_account_created", def.kind);
-    created += 1;
-  }
-  await supabaseAdmin.from("bot_jobs").upsert({ job_key: SEED_KEY, ran_at: new Date().toISOString() });
-  return { created: created > 0, count: created };
-});
 
 /** Admin o'z login va/yoki parolini o'zgartiradi. */
 export const changeMyCredentials = createServerFn({ method: "POST" })

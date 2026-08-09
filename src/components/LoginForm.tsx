@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { ensureDefaultAdmin, heartbeat } from "@/lib/access.functions";
+import { heartbeat } from "@/lib/access.functions";
 import { ADMIN_CONTACT, emailOf } from "@/lib/auth-config";
 
 /** Login + parol kirish oynasi. Hisoblarni admin (yoki ustoz) yaratadi. */
@@ -11,11 +11,7 @@ export default function LoginForm({ onDone }: { onDone?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const ping = useServerFn(heartbeat);
-  const seedAdmin = useServerFn(ensureDefaultAdmin);
 
-  useEffect(() => {
-    seedAdmin().catch(() => {});
-  }, [seedAdmin]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
