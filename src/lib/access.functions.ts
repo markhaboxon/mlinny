@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireTeacher } from "./role-middleware";
+
 import { z } from "zod";
 
 const KIND = z.enum(["admin", "teacher", "student", "user"]);
