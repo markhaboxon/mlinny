@@ -86,6 +86,8 @@ export default function Dashboard({ profile, onStartLearning, onOpenMistakes, on
           </button>
         </div>
       </header>
+      {user && <GameBar />}
+
 
       <div className="mt-4 p-3 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 text-sm">
         <div className="font-semibold">✨ AI: Google Gemini</div>
