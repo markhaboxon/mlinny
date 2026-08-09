@@ -32,6 +32,7 @@ import AssignmentsTab from "@/components/teacher/AssignmentsTab";
 import CurriculumTab from "@/components/teacher/CurriculumTab";
 import MaterialsTab from "@/components/teacher/MaterialsTab";
 import ReportTab from "@/components/teacher/ReportTab";
+import AiToolsTab from "@/components/teacher/AiToolsTab";
 import { useAuthUser } from "@/hooks/useCloudSync";
 import { useRequireRole } from "@/hooks/useRequireRole";
 
@@ -50,7 +51,7 @@ export const Route = createFileRoute("/teacher/$groupId")({
   component: GroupPage,
 });
 
-type Tab = "xulosa" | "oquvchilar" | "topshiriq" | "dastur" | "material" | "hisobot";
+type Tab = "xulosa" | "oquvchilar" | "topshiriq" | "dastur" | "material" | "hisobot" | "ai";
 
 interface Summary {
   total_students: number;
@@ -253,6 +254,7 @@ function GroupPage() {
               ["dastur", "Dars dasturi"],
               ["material", "Materiallar"],
               ["hisobot", "Hisobot"],
+              ["ai", "AI vositalar"],
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
@@ -410,6 +412,7 @@ function GroupPage() {
         {tab === "hisobot" && (
           <ReportTab groupId={groupId} groupName={group?.name ?? "Guruh"} students={students} />
         )}
+        {tab === "ai" && <AiToolsTab groupId={groupId} students={students} />}
       </div>
     </div>
   );
