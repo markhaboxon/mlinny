@@ -638,60 +638,10 @@ export const markNotificationsRead = createServerFn({ method: "POST" })
   });
 
 /* ------------------------------------------------------------------ *
- * Default admin + credential change
+ * Credential change
  * ------------------------------------------------------------------ */
 
-/**
- * Standart 4 ta hisob — tizimda umuman hisob bo'lmasa bir marta yaratiladi.
- * Loginlar normalizatsiya qilinadi (apostrof olib tashlanadi), shuning uchun
- * `O'quvchi` ham, `oquvchi` ham bir xil hisobga olib boradi.
- */
-const DEFAULT_ACCOUNTS: {
-  login: string;
-  password: string;
-  kind: "admin" | "teacher" | "student" | "user";
-  fullName: string;
-}[] = [
-  { login: "adminlogini", password: "adminparoli", kind: "admin", fullName: "Admin" },
-  { login: "odam", password: "odamparoli", kind: "user", fullName: "Foydalanuvchi" },
-  { login: "Ustozcha", password: "Ustozchaparoli", kind: "teacher", fullName: "Ustoz" },
-  { login: "O'quvchi", password: "O'quvchiparoli", kind: "student", fullName: "O'quvchi" },
-];
 
-export const ensureDefaultAdmin = createServerFn({ method: "POST" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { createAccount, logActivity, normalizeLogin } = await import("./access.server");
-  // Bir marta ishlaydi: marker qo'yilgach standart hisoblar qayta tiklanmaydi.
-  const SEED_KEY = "default_accounts_seeded";
-  const { data: marker } = await supabaseAdmin
-    .from("bot_jobs")
-    .select("job_key")
-    .eq("job_key", SEED_KEY)
-    .maybeSingle();
-  if (marker) return { created: false };
-
-  let created = 0;
-  for (const def of DEFAULT_ACCOUNTS) {
-    const login = normalizeLogin(def.login);
-    const { data: exists } = await supabaseAdmin
-      .from("app_accounts")
-      .select("id")
-      .eq("login", login)
-      .maybeSingle();
-    if (exists) continue;
-    const { account } = await createAccount({
-      login,
-      password: def.password,
-      kind: def.kind,
-      fullName: def.fullName,
-      createdBy: null,
-    });
-    await logActivity(account.user_id, account.login, "default_account_created", def.kind);
-    created += 1;
-  }
-  await supabaseAdmin.from("bot_jobs").upsert({ job_key: SEED_KEY, ran_at: new Date().toISOString() });
-  return { created: created > 0, count: created };
-});
 
 /** Admin o'z login va/yoki parolini o'zgartiradi. */
 export const changeMyCredentials = createServerFn({ method: "POST" })
