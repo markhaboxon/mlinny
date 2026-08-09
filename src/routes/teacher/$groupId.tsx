@@ -412,6 +412,7 @@ function GroupPage() {
         {tab === "hisobot" && (
           <ReportTab groupId={groupId} groupName={group?.name ?? "Guruh"} students={students} />
         )}
+        {tab === "ai" && <AiToolsTab groupId={groupId} students={students} />}
       </div>
     </div>
   );
