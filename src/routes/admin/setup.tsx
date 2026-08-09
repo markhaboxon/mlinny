@@ -26,6 +26,7 @@ function SetupPage() {
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [setupSecret, setSetupSecret] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -35,7 +36,7 @@ function SetupPage() {
     setBusy(true);
     setErr(null);
     try {
-      await create({ data: { login: login.trim(), password } });
+      await create({ data: { login: login.trim(), password, setupSecret: setupSecret.trim() } });
       setDone(true);
       refetch();
     } catch (e2) {
@@ -43,6 +44,7 @@ function SetupPage() {
     }
     setBusy(false);
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
