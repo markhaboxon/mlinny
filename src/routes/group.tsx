@@ -84,6 +84,13 @@ function MyGroupPage() {
     enabled: isStudent && !!group,
     retry: false,
   });
+  const { data: messages = [] } = useQuery({
+    queryKey: ["my-group-messages", group?.group_id],
+    queryFn: () => listMsgs({ data: { groupId: group!.group_id } }),
+    enabled: isStudent && !!group,
+    retry: false,
+    refetchInterval: 60000,
+  });
 
   const joinMut = useMutation({
     mutationFn: () => join({ data: { code } }),
