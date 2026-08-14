@@ -432,6 +432,10 @@ function AdminPage() {
         </button>
       </section>
 
+      <ApiKeysSection enabled={isAdmin} />
+
+
+
       <section className="card-surface p-4">
         <h2 className="font-bold">Faollik hisoboti</h2>
         <div className="mt-3 max-h-96 overflow-y-auto text-sm divide-y divide-border/60">
