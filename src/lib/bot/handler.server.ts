@@ -19,6 +19,8 @@ import {
   today,
   type BotUser,
 } from "./core.server";
+import { GUEST_COMMANDS, syncChatCommands } from "./commands.server";
+import { setCommands } from "@/lib/telegram.server";
 
 type TgUser = { id: number; username?: string; first_name?: string };
 type TgMessage = {
@@ -55,9 +57,22 @@ Login/parolingiz bo'lmasa, ustozingiz yoki admin bilan bog'laning (@qiziqyabsizm
 // Entry point
 // ---------------------------------------------------------------------------
 export async function handleUpdate(update: TgUpdate) {
-  if (update.callback_query) return handleCallback(update.callback_query);
-  const msg = update.message ?? update.edited_message;
-  if (msg) return handleMessage(msg);
+  try {
+    if (update.callback_query) return await handleCallback(update.callback_query);
+    const msg = update.message ?? update.edited_message;
+    if (msg) return await handleMessage(msg);
+  } catch (e) {
+    // Never leave the user without an answer: report the failure in the chat.
+    const chatId = update.callback_query?.message?.chat.id ?? (update.message ?? update.edited_message)?.chat.id;
+    console.error("bot handler error", e);
+    if (chatId) {
+      const m = e instanceof Error ? e.message : String(e);
+      await sendMessage(
+        chatId,
+        `⚠️ Buyruqni bajarishda xatolik yuz berdi.\n<code>${esc(m).slice(0, 300)}</code>\n\nQayta urinib ko'ring yoki /menu ni bosing.`,
+      ).catch(() => {});
+    }
+  }
 }
 
 async function handleMessage(msg: TgMessage) {
@@ -78,6 +93,7 @@ async function handleMessage(msg: TgMessage) {
   if (text.startsWith("/")) return handleCommand(user, text);
   return handleFreeText(user, text);
 }
+
 
 // ---------------------------------------------------------------------------
 // /start + account linking
@@ -128,6 +144,7 @@ async function handleStart(chatId: number, from: TgUser | undefined, text: strin
       .eq("id", link.id);
 
     const user = await findUserByChat(chatId);
+    if (user) await syncChatCommands(user);
     return void sendMessage(
       chatId,
       `✅ Hisobingiz ulandi!\n\n${greeting(user!)}`,
@@ -135,7 +152,11 @@ async function handleStart(chatId: number, from: TgUser | undefined, text: strin
     );
   }
 
-  if (existing) return void sendMessage(chatId, greeting(existing), { buttons: mainMenu(existing) });
+  if (existing) {
+    await syncChatCommands(existing);
+    return void sendMessage(chatId, greeting(existing), { buttons: mainMenu(existing) });
+  }
+  await setCommands(GUEST_COMMANDS, chatId).catch(() => {});
   return void sendMessage(chatId, NEEDS_LINK);
 }
 
@@ -188,8 +209,10 @@ async function handleCommand(u: BotUser, text: string) {
 
   switch (cmd) {
     case "/help":
+      await syncChatCommands(u);
       return void sendMessage(u.chatId, helpText(u), { buttons: mainMenu(u) });
     case "/menu":
+      await syncChatCommands(u);
       return void sendMessage(u.chatId, greeting(u), { buttons: mainMenu(u) });
     case "/profile":
       return profile(u);

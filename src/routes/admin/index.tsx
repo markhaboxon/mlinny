@@ -17,6 +17,7 @@ import {
 import { KIND_LABEL } from "@/lib/auth-config";
 import { changeMyCredentials } from "@/lib/access.functions";
 import { setupTelegramWebhook } from "@/lib/telegram.functions";
+import ApiKeysSection from "@/components/admin/ApiKeysSection";
 import { copyText, fmtTime, isOnline, linkFor } from "@/lib/clipboard";
 import { useAuthUser } from "@/hooks/useCloudSync";
 import { useRequireRole } from "@/hooks/useRequireRole";
@@ -431,6 +432,10 @@ function AdminPage() {
           Webhook'ni ulash / yangilash
         </button>
       </section>
+
+      <ApiKeysSection enabled={isAdmin} />
+
+
 
       <section className="card-surface p-4">
         <h2 className="font-bold">Faollik hisoboti</h2>

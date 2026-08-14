@@ -84,9 +84,24 @@ export async function sendChatAction(chatId: number | string, action = "typing")
   return call("sendChatAction", { chat_id: chatId, action });
 }
 
-export async function setCommands(commands: { command: string; description: string }[]) {
-  return call("setMyCommands", { commands });
+export type BotCommand = { command: string; description: string };
+
+/**
+ * Registers the "/" command list. Without a scope it sets the global default
+ * list; with a chatId it sets a per-chat list, so a student never sees teacher
+ * commands and vice versa.
+ */
+export async function setCommands(commands: BotCommand[], chatId?: number | string) {
+  return call("setMyCommands", {
+    commands,
+    ...(chatId ? { scope: { type: "chat", chat_id: chatId } } : {}),
+  });
 }
+
+export async function deleteChatCommands(chatId: number | string) {
+  return call("deleteMyCommands", { scope: { type: "chat", chat_id: chatId } });
+}
+
 
 export async function setWebhook(url: string) {
   return call("setWebhook", {

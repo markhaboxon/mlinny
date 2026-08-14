@@ -13,7 +13,7 @@ const RATE_LIMIT_COOLDOWN_MS = 65_000; // Gemini free-tier limits reset per minu
 const INVALID_KEY_COOLDOWN_MS = 30 * 60_000;
 const cooldown = new Map<string, number>();
 
-type DbKey = { key: string; owner: string | null };
+type DbKey = { key: string; owner: string | null; shared: boolean };
 let dbKeysCache: { keys: DbKey[]; at: number } = { keys: [], at: 0 };
 const DB_CACHE_MS = 20_000;
 
@@ -34,14 +34,25 @@ async function dbKeys(): Promise<DbKey[]> {
   if (now - dbKeysCache.at < DB_CACHE_MS) return dbKeysCache.keys;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
-      .from("gemini_keys")
-      .select("api_key, added_by")
-      .eq("active", true)
-      .order("created_at", { ascending: true });
+    const [{ data }, { data: admins }] = await Promise.all([
+      supabaseAdmin
+        .from("gemini_keys")
+        .select("api_key, added_by")
+        .eq("active", true)
+        .order("created_at", { ascending: true }),
+      supabaseAdmin.from("app_accounts").select("user_id").eq("kind", "admin"),
+    ]);
+    const adminIds = new Set(
+      (admins ?? []).map((a) => a.user_id).filter((v): v is string => typeof v === "string"),
+    );
     const keys = (data ?? [])
       .filter((r) => !!r.api_key)
-      .map((r) => ({ key: r.api_key as string, owner: (r.added_by as string | null) ?? null }));
+      .map((r) => {
+        const owner = (r.added_by as string | null) ?? null;
+        // Only admin-connected (or env) keys are shared with everyone;
+        // a key a student connects is used for that student only.
+        return { key: r.api_key as string, owner, shared: !owner || adminIds.has(owner) };
+      });
     dbKeysCache = { keys, at: now };
     return keys;
   } catch {
@@ -74,27 +85,43 @@ function isCooling(key: string) {
   return true;
 }
 
+/** Cooldown end timestamp (ms) for a key, or null when it is ready to use. */
+export function cooldownUntil(key: string): number | null {
+  const until = cooldown.get(key);
+  return until && until > Date.now() ? until : null;
+}
+
 export async function allKeys(): Promise<string[]> {
   const keys = [...envKeys(), ...(await dbKeys()).map((k) => k.key)];
   return Array.from(new Set(keys));
 }
 
-export async function keyPoolInfo() {
-  const keys = await allKeys();
-  const available = keys.filter((k) => !isCooling(k));
-  return { total: keys.length, available: available.length };
+/** Pool size as seen by one user: shared keys + that user's own keys. */
+export async function keyPoolInfo(userId?: string) {
+  const db = await dbKeys();
+  const usable = Array.from(
+    new Set([
+      ...envKeys(),
+      ...db.filter((k) => k.shared || (userId && k.owner === userId)).map((k) => k.key),
+    ]),
+  );
+  return { total: usable.length, available: usable.filter((k) => !isCooling(k)).length };
 }
 
 /**
  * B2 + B3 — build the try-order for one request:
  *  1. the caller's own connected keys first (personal keys before the shared pool),
  *  2. then the shared pool rotated round-robin so parallel requests spread out.
+ * Personal keys of *other* users are never used.
  */
 async function orderedKeys(userId?: string): Promise<{ order: string[]; total: number }> {
   const db = await dbKeys();
   const personal = userId ? db.filter((k) => k.owner === userId).map((k) => k.key) : [];
   const shared = Array.from(
-    new Set([...envKeys(), ...db.filter((k) => !personal.includes(k.key)).map((k) => k.key)]),
+    new Set([
+      ...envKeys(),
+      ...db.filter((k) => k.shared && !personal.includes(k.key)).map((k) => k.key),
+    ]),
   );
 
   const start = shared.length > 0 ? rrCursor++ % shared.length : 0;
@@ -215,4 +242,112 @@ export async function validateGeminiKey(key: string): Promise<{ ok: boolean; err
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Kalitni tekshirib bo'lmadi" };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Admin view of the pool
+// ---------------------------------------------------------------------------
+export type KeyReport = {
+  id: string | null;
+  masked: string;
+  label: string | null;
+  source: "env" | "db";
+  scope: "umumiy" | "shaxsiy";
+  ownerId: string | null;
+  active: boolean;
+  createdAt: string | null;
+  cooldownUntil: string | null;
+  status: "ok" | "limit" | "invalid" | "unknown";
+  statusText: string;
+};
+
+export function maskKey(key: string) {
+  return key.length <= 12 ? `${key.slice(0, 4)}…` : `${key.slice(0, 8)}…${key.slice(-4)}`;
+}
+
+/** Full picture of every key in the system, optionally live-checked at Google. */
+export async function keyReport(live: boolean): Promise<KeyReport[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const [{ data: rows }, { data: admins }] = await Promise.all([
+    supabaseAdmin
+      .from("gemini_keys")
+      .select("id, api_key, label, added_by, active, created_at")
+      .order("created_at", { ascending: true }),
+    supabaseAdmin.from("app_accounts").select("user_id, login, kind"),
+  ]);
+  const accounts = new Map((admins ?? []).map((a) => [a.user_id as string, a]));
+
+  const items: (KeyReport & { raw: string })[] = [];
+
+  for (const k of envKeys()) {
+    items.push({
+      raw: k,
+      id: null,
+      masked: maskKey(k),
+      label: "Server sozlamasi (env)",
+      source: "env",
+      scope: "umumiy",
+      ownerId: null,
+      active: true,
+      createdAt: null,
+      cooldownUntil: null,
+      status: "unknown",
+      statusText: "",
+    });
+  }
+
+  for (const r of rows ?? []) {
+    const owner = (r.added_by as string | null) ?? null;
+    const acc = owner ? accounts.get(owner) : undefined;
+    const isAdmin = !owner || acc?.kind === "admin";
+    items.push({
+      raw: r.api_key as string,
+      id: r.id as string,
+      masked: maskKey(r.api_key as string),
+      label: (r.label as string | null) ?? (acc ? `${acc.login} (${acc.kind})` : null),
+      source: "db",
+      scope: isAdmin ? "umumiy" : "shaxsiy",
+      ownerId: owner,
+      active: Boolean(r.active),
+      createdAt: (r.created_at as string | null) ?? null,
+      cooldownUntil: null,
+      status: "unknown",
+      statusText: "",
+    });
+  }
+
+  const out: KeyReport[] = [];
+  for (const it of items) {
+    const until = cooldownUntil(it.raw);
+    let status: KeyReport["status"] = until ? "limit" : "ok";
+    let statusText = until
+      ? `Limit tugagan — ${new Date(until).toLocaleTimeString("uz-UZ")} da qayta ochiladi`
+      : "Ishlayapti";
+
+    if (live) {
+      const check = await validateGeminiKey(it.raw);
+      if (!check.ok) {
+        status = "invalid";
+        statusText = check.error ?? "Kalit ishlamayapti";
+      } else if (!until) {
+        status = "ok";
+        statusText = "Ishlayapti (tekshirildi)";
+      }
+    }
+
+    out.push({
+      id: it.id,
+      masked: it.masked,
+      label: it.label,
+      source: it.source,
+      scope: it.scope,
+      ownerId: it.ownerId,
+      active: it.active,
+      createdAt: it.createdAt,
+      cooldownUntil: until ? new Date(until).toISOString() : null,
+      status,
+      statusText,
+    });
+  }
+  return out;
 }

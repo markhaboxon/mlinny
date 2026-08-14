@@ -11,6 +11,7 @@ import {
   myCurriculum,
   myGroup,
 } from "@/lib/teacher.functions";
+import { listGroupMessages } from "@/lib/access.functions";
 import { DAY_NAMES } from "@/lib/teacher-ui";
 import { useAuthUser } from "@/hooks/useCloudSync";
 import { useRequireRole } from "@/hooks/useRequireRole";
@@ -62,6 +63,7 @@ function MyGroupPage() {
   const listA = useServerFn(myAssignments);
   const listC = useServerFn(myCurriculum);
   const done = useServerFn(completeAssignment);
+  const listMsgs = useServerFn(listGroupMessages);
 
   const isStudent = guard.state === "ok";
 
@@ -83,6 +85,13 @@ function MyGroupPage() {
       listC() as Promise<{ topic: string; planned_date: string | null; taught_at: string | null }[]>,
     enabled: isStudent && !!group,
     retry: false,
+  });
+  const { data: messages = [] } = useQuery({
+    queryKey: ["my-group-messages", group?.group_id],
+    queryFn: () => listMsgs({ data: { groupId: group!.group_id } }),
+    enabled: isStudent && !!group,
+    retry: false,
+    refetchInterval: 60000,
   });
 
   const joinMut = useMutation({
@@ -197,6 +206,22 @@ function MyGroupPage() {
                 hisob ma'lumotlaringiz unga ko'rinmaydi.
               </p>
             </div>
+
+            {messages.length > 0 && (
+              <div className="card-surface p-4">
+                <h2 className="font-bold">Ustoz xabarlari</h2>
+                <ul className="mt-3 space-y-2">
+                  {messages.map((m) => (
+                    <li key={m.id} className="rounded-lg border border-border p-3">
+                      <p className="text-sm whitespace-pre-wrap">{m.body}</p>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {new Date(m.created_at).toLocaleString("uz-UZ")}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="card-surface p-4">
               <h2 className="font-bold">Topshiriqlar</h2>
