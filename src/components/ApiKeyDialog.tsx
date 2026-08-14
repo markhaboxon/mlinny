@@ -26,11 +26,75 @@ export default function ApiKeyDialog() {
   return <Dialog exhausted={exhausted} onClose={() => setOpen(false)} />;
 }
 
+const GUIDE: { title: string; steps: string[] }[] = [
+  {
+    title: "1-qadam. Google hisobingizga kiring",
+    steps: [
+      "Telefon yoki kompyuterda brauzerni oching (Chrome bo'lsa yaxshi).",
+      "Gmail hisobingizga kirgan bo'ling. Kirmagan bo'lsangiz, avval Gmail'ga kiring.",
+    ],
+  },
+  {
+    title: "2-qadam. Google AI Studio saytini oching",
+    steps: [
+      "Yuqoridagi \"Google AI Studio dan kalit olish\" havolasini bosing (yoki aistudio.google.com/apikey manzilini yozing).",
+      "Sayt ochilganda \"Sign in\" chiqsa, Gmail hisobingizni tanlang.",
+      "Birinchi marta kirsangiz, shartlarga rozilik oynasi chiqadi — \"I agree\" / \"Men roziman\" degan katakchani belgilab, \"Continue\" tugmasini bosing.",
+    ],
+  },
+  {
+    title: "3-qadam. Yangi kalit yarating",
+    steps: [
+      "Sahifadagi ko'k \"Create API key\" (API kalit yaratish) tugmasini bosing.",
+      "Agar \"Select a project\" / loyiha tanlash so'ralsa, ro'yxatdan istalgan loyihani tanlang yoki \"Create project\" ni bosib yangi loyiha yarating (nom sifatida masalan: linny).",
+      "So'ng yana \"Create API key in existing project\" tugmasini bosing.",
+      "Bir necha soniyada uzun kalit paydo bo'ladi. U odatda AIza... bilan boshlanadi.",
+    ],
+  },
+  {
+    title: "4-qadam. Kalitni nusxalang",
+    steps: [
+      "Kalit yonidagi nusxalash belgisini (ikkita ustma-ust turgan kvadrat 🗐) bosing — kalit telefoningiz xotirasiga ko'chiriladi.",
+      "Belgi ko'rinmasa: kalit ustiga barmog'ingizni bosib turing → \"Copy\" / \"Nusxalash\" ni tanlang.",
+      "Kalitni hech kimga bermang: u sizning shaxsiy kalitingiz.",
+    ],
+  },
+  {
+    title: "5-qadam. Shu yerga joylashtiring",
+    steps: [
+      "Linny'ga qayting va shu oynadagi bo'sh katakchani bosing.",
+      "Barmog'ingizni katakcha ustida bosib turing → \"Paste\" / \"Joylashtirish\" ni tanlang (kompyuterda Ctrl+V).",
+      "\"Ulash\" tugmasini bosing. Bir-ikki soniya tekshiriladi.",
+      "\"Kalit ulandi\" degan yashil yozuv chiqsa — hammasi tayyor! ✅",
+    ],
+  },
+];
+
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "Kalit pullikmi?",
+    a: "Yo'q. Google AI Studio bepul kalit beradi. Faqat kunlik/daqiqalik cheklov bor — cheklov tugasa, tizim boshqa kalitga o'tadi yoki 1-2 daqiqadan keyin yana ishlaydi.",
+  },
+  {
+    q: "Kalitim boshqalarga ko'rinadimi?",
+    a: "Yo'q. Siz qo'shgan kalit faqat sizning mashg'ulotlaringizda ishlatiladi va saytda to'liq ko'rinmaydi.",
+  },
+  {
+    q: "\"Bu kalit avval kiritilgan\" desa nima qilay?",
+    a: "Demak shu kalit tizimda allaqachon bor. Google AI Studio'da \"Create API key\" ni bosib yangi kalit yarating va shuni kiriting.",
+  },
+  {
+    q: "Kalit ishlamadi desa?",
+    a: "Kalitni to'liq nusxalaganingizni tekshiring (boshi AIza..., bo'sh joy yoki tushib qolgan harf bo'lmasin). Kerak bo'lsa yangi kalit yarating.",
+  },
+];
+
 function Dialog({ exhausted, onClose }: { exhausted: boolean; onClose: () => void }) {
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [guide, setGuide] = useState(false);
 
   async function submit() {
     if (key.trim().length < 15) {
@@ -69,24 +133,62 @@ function Dialog({ exhausted, onClose }: { exhausted: boolean; onClose: () => voi
           <>
             <h2 className="text-lg md:text-xl font-bold">🔑 Yangi API ulash</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Google AI Studio dan olgan Gemini API kalitingizni kiriting — u avtomatik ulanadi va limit
-              almashinuviga qo'shiladi.
+              Google AI Studio dan olgan Gemini API kalitingizni kiriting — u faqat sizning
+              mashg'ulotlaringiz uchun ishlatiladi.
             </p>
           </>
         )}
 
-        <a
-          href="https://aistudio.google.com/apikey"
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-block text-sm text-primary hover:underline"
-        >
-          Google AI Studio dan kalit olish →
-        </a>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-primary hover:underline"
+          >
+            Google AI Studio dan kalit olish →
+          </a>
+          <button
+            type="button"
+            onClick={() => setGuide((v) => !v)}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            {guide ? "📘 Yo'riqnomani yopish" : "📘 Yo'riqnoma — qanday olish kerak?"}
+          </button>
+        </div>
+
+        {guide && (
+          <div className="mt-3 rounded-xl border border-border bg-muted/40 p-4 text-sm space-y-4">
+            <p className="text-muted-foreground">
+              Quyidagi qadamlarni birma-bir bajaring. Hech qanday texnik bilim kerak emas — 2-3 daqiqa
+              vaqt oladi.
+            </p>
+            {GUIDE.map((g) => (
+              <div key={g.title}>
+                <div className="font-semibold">{g.title}</div>
+                <ul className="mt-1 space-y-1 list-disc pl-5 text-muted-foreground">
+                  {g.steps.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div>
+              <div className="font-semibold">Ko'p beriladigan savollar</div>
+              <ul className="mt-1 space-y-2 text-muted-foreground">
+                {FAQ.map((f) => (
+                  <li key={f.q}>
+                    <span className="font-medium text-foreground">{f.q}</span> — {f.a}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {done ? (
           <div className="mt-4 p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-sm">
-            ✅ Kalit ulandi! Endi limit tugasa, avtomatik shu kalitga o'tadi.
+            ✅ Kalit qabul qilindi! U faqat sizning hisobingiz uchun ishlatiladi.
           </div>
         ) : (
           <>
@@ -120,3 +222,4 @@ function Dialog({ exhausted, onClose }: { exhausted: boolean; onClose: () => voi
     </div>
   );
 }
+
