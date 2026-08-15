@@ -19,8 +19,22 @@ import {
   today,
   type BotUser,
 } from "./core.server";
-import { GUEST_COMMANDS, syncChatCommands } from "./commands.server";
-import { setCommands } from "@/lib/telegram.server";
+import { allowed, syncRoleCommands } from "./roles.server";
+import { handleUnregistered, registrationHelp, startRegistration } from "./register.server";
+import { parentByChat, parentItem, parentMenu, parentSetting, parentText } from "./parent.server";
+import { resolveDevice } from "./security.server";
+import {
+  pokeStudent,
+  teacherAbsent,
+  teacherAssignSave,
+  teacherAssignStart,
+  teacherCurriculum,
+  teacherGroupsList,
+  teacherMaterials,
+  teacherStudentCard,
+  teacherTop,
+} from "./teacher-extra.server";
+
 
 type TgUser = { id: number; username?: string; first_name?: string };
 type TgMessage = {
@@ -46,34 +60,34 @@ export type TgUpdate = {
 
 const NEEDS_LINK = `👋 Salom! Bu <b>Linny AI</b> boti.
 
-Botdan foydalanish uchun avval saytdagi hisobingizni ulashingiz kerak:
-1. <a href="${SITE_URL}">${SITE_URL}</a> saytiga login va parol bilan kiring
-2. "Telegram botni ulash" tugmasini bosing
-3. Ochilgan havolani bosing — tayyor ✅
+❌ Sizning hisobingiz topilmadi.
 
-Login/parolingiz bo'lmasa, ustozingiz yoki admin bilan bog'laning (@qiziqyabsizmi).`;
+Hisobingizni ulash uchun administrator yoki ustozingiz bergan <b>shaxsiy havolani</b> bosishingiz kerak (havola <code>t.me/...?start=login_...</code> ko'rinishida bo'ladi). Parol kerak emas.
+
+Havolangiz bo'lmasa administrator bilan bog'laning (@qiziqyabsizmi).`;
+
 
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 export async function handleUpdate(update: TgUpdate) {
+  const chatId = update.callback_query?.message?.chat?.id ?? update.message?.chat?.id ?? update.edited_message?.chat?.id;
   try {
     if (update.callback_query) return await handleCallback(update.callback_query);
     const msg = update.message ?? update.edited_message;
     if (msg) return await handleMessage(msg);
   } catch (e) {
-    // Never leave the user without an answer: report the failure in the chat.
-    const chatId = update.callback_query?.message?.chat.id ?? (update.message ?? update.edited_message)?.chat.id;
-    console.error("bot handler error", e);
+    // Hech qachon "jim" qolmaslik uchun: xatolikda ham foydalanuvchiga javob boradi.
+    console.error("bot update error", e);
     if (chatId) {
-      const m = e instanceof Error ? e.message : String(e);
       await sendMessage(
         chatId,
-        `⚠️ Buyruqni bajarishda xatolik yuz berdi.\n<code>${esc(m).slice(0, 300)}</code>\n\nQayta urinib ko'ring yoki /menu ni bosing.`,
+        "⚠️ Buyruqni bajarishda xatolik yuz berdi. Bir daqiqadan keyin qayta urinib ko'ring.",
       ).catch(() => {});
     }
   }
 }
+
 
 async function handleMessage(msg: TgMessage) {
   const chatId = msg.chat.id;
@@ -83,10 +97,17 @@ async function handleMessage(msg: TgMessage) {
 
   const user = await findUserByChat(chatId);
   if (!user) {
-    if (msg.voice || msg.photo) return void sendMessage(chatId, NEEDS_LINK);
-    return void sendMessage(chatId, NEEDS_LINK);
+    // Ota-ona?
+    const parent = await parentByChat(chatId);
+    if (parent) {
+      if (await parentText(chatId, parent, text)) return;
+      return parentMenu(chatId, parent);
+    }
+    // Hech qanday rolga bog'lanmagan foydalanuvchi.
+    return handleUnregistered(chatId, msg.from?.username, text);
   }
 
+  await syncRoleCommands(user);
   if (msg.voice) return handleVoice(user, msg.voice.file_id);
   if (msg.photo?.length) return handlePhoto(user);
 
@@ -102,6 +123,81 @@ async function handleStart(chatId: number, from: TgUser | undefined, text: strin
   const token = text.split(/\s+/)[1]?.trim();
   const existing = await findUserByChat(chatId);
 
+  // Ota-ona havolasi: parent_<token> (eski format: p_<token>)
+  const parentToken = token?.startsWith("parent_")
+    ? token.slice(7)
+    : token?.startsWith("p_")
+      ? token.slice(2)
+      : null;
+  if (parentToken) {
+    const { data: pl } = await supabaseAdmin
+      .from("parent_links")
+      .select("id, account_id, active, telegram_id")
+      .eq("token", parentToken)
+      .maybeSingle();
+    if (!pl || !pl.active)
+      return void sendMessage(chatId, "❌ Bu havola endi amal qilmaydi. Administratorga murojaat qiling.");
+    if (pl.telegram_id && pl.telegram_id !== chatId)
+      return void sendMessage(chatId, "❌ Bu havola allaqachon ishlatilgan.");
+    await supabaseAdmin
+      .from("parent_links")
+      .update({ telegram_id: chatId, linked_at: new Date().toISOString() })
+      .eq("id", pl.id as string);
+    const p = await parentByChat(chatId);
+    if (!p) return void sendMessage(chatId, "❌ Hisob topilmadi.");
+    await sendMessage(chatId, "✅ Ota-ona kuzatuvi ulandi!");
+    return parentMenu(chatId, p);
+  }
+
+  // O'quvchi/ustoz kirish havolasi: login_<token>
+  if (token?.startsWith("login_")) {
+    const raw = token.slice(6);
+    const { data: link } = await supabaseAdmin
+      .from("access_links")
+      .select("id, account_id, used_at")
+      .eq("token", raw)
+      .maybeSingle();
+    if (!link)
+      return void sendMessage(chatId, "❌ Bu havola endi amal qilmaydi. Administratorga murojaat qiling.");
+    if (link.used_at) return void sendMessage(chatId, "❌ Bu havola allaqachon ishlatilgan.");
+
+    const { data: acc } = await supabaseAdmin
+      .from("app_accounts")
+      .select("id, user_id, full_name, kind, active")
+      .eq("id", link.account_id as string)
+      .maybeSingle();
+    if (!acc?.user_id || !acc.active)
+      return void sendMessage(chatId, "❌ Hisob topilmadi yoki bloklangan. Administratorga murojaat qiling.");
+
+    const { data: taken } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .eq("telegram_id", chatId)
+      .maybeSingle();
+    if (taken && taken.user_id !== acc.user_id)
+      return void sendMessage(chatId, "⚠️ Bu Telegram akkaunt boshqa hisobga ulangan.");
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        telegram_id: chatId,
+        telegram_username: from?.username ?? null,
+        telegram_linked_at: new Date().toISOString(),
+      })
+      .eq("user_id", acc.user_id as string);
+
+    const name = (acc.full_name as string) ?? "";
+    const user = await findUserByChat(chatId);
+    await sendMessage(
+      chatId,
+      `✅ Xush kelibsiz${name ? `, <b>${esc(name.split(" ")[0]!)}</b>` : ""}!\n\nSaytga kirish uchun quyidagi tugmani bosing — login yoki parol kerak emas.`,
+      { buttons: [[{ text: "🌐 Saytga kirish", url: `${SITE_URL}/enter/${raw}` }]] },
+    );
+    if (user) return void sendMessage(chatId, greeting(user), { buttons: mainMenu(user) });
+    return;
+  }
+
+
   if (token) {
     const { data: link } = await supabaseAdmin
       .from("telegram_links")
@@ -110,6 +206,7 @@ async function handleStart(chatId: number, from: TgUser | undefined, text: strin
       .maybeSingle();
 
     if (!link) return void sendMessage(chatId, "❌ Havola noto'g'ri. Saytdan yangi havola oling.");
+
     if (link.used_at)
       return void sendMessage(chatId, "❌ Bu havola allaqachon ishlatilgan. Saytdan yangi havola oling.");
     if (new Date(link.expires_at) < new Date())
@@ -144,7 +241,6 @@ async function handleStart(chatId: number, from: TgUser | undefined, text: strin
       .eq("id", link.id);
 
     const user = await findUserByChat(chatId);
-    if (user) await syncChatCommands(user);
     return void sendMessage(
       chatId,
       `✅ Hisobingiz ulandi!\n\n${greeting(user!)}`,
@@ -153,12 +249,18 @@ async function handleStart(chatId: number, from: TgUser | undefined, text: strin
   }
 
   if (existing) {
-    await syncChatCommands(existing);
+    await syncRoleCommands(existing);
     return void sendMessage(chatId, greeting(existing), { buttons: mainMenu(existing) });
   }
-  await setCommands(GUEST_COMMANDS, chatId).catch(() => {});
-  return void sendMessage(chatId, NEEDS_LINK);
+  {
+    const p = await parentByChat(chatId);
+    if (p) return parentMenu(chatId, p);
+  }
+
+  await sendMessage(chatId, NEEDS_LINK);
+  return handleUnregistered(chatId, from?.username, "");
 }
+
 
 function greeting(u: BotUser) {
   const role = u.kind === "teacher" ? "Ustoz" : u.kind === "admin" ? "Admin" : "O'quvchi";
@@ -173,11 +275,20 @@ function mainMenu(u: BotUser): Button[][] {
         { text: "📊 Hisobot", callback_data: "report" },
       ],
       [
+        { text: "🏫 Guruhlarim", callback_data: "groups" },
+        { text: "🏆 Reyting", callback_data: "top" },
+      ],
+      [
+        { text: "⛔️ Bugun kelmaganlar", callback_data: "absent" },
+        { text: "📝 Topshiriq berish", callback_data: "assign" },
+      ],
+      [
         { text: "📢 Xabar yuborish", callback_data: "send" },
         { text: "🔗 Taklif havolasi", callback_data: "invite" },
       ],
       [{ text: "🌐 Saytga o'tish", url: SITE_URL }],
     ];
+
   return [
     [
       { text: "📚 Bugungi so'zlar", callback_data: "words" },
@@ -207,12 +318,17 @@ async function handleCommand(u: BotUser, text: string) {
   const cmd = raw!.replace(/@.*$/, "").toLowerCase();
   const arg = rest.join(" ").trim();
 
+  // Rolga tegishli bo'lmagan buyruq umuman tanilmaydi.
+  if (!allowed(u.kind, cmd))
+    return void sendMessage(u.chatId, "❓ Bunday buyruq yo'q. /help ni bosing.", {
+      buttons: mainMenu(u),
+    });
+
   switch (cmd) {
+
     case "/help":
-      await syncChatCommands(u);
       return void sendMessage(u.chatId, helpText(u), { buttons: mainMenu(u) });
     case "/menu":
-      await syncChatCommands(u);
       return void sendMessage(u.chatId, greeting(u), { buttons: mainMenu(u) });
     case "/profile":
       return profile(u);
@@ -267,6 +383,20 @@ async function handleCommand(u: BotUser, text: string) {
           "🕒 Formatda yozing:\n<code>SOAT:DAQIQA xabar matni</code>\nMasalan: <code>09:00 Ertaga darsga kitob olib keling</code>",
         );
       });
+    case "/groups":
+      return teacherOnly(u, () => teacherGroupsList(u));
+    case "/student":
+      return teacherOnly(u, () => teacherStudentCard(u, arg));
+    case "/top":
+      return teacherOnly(u, () => teacherTop(u));
+    case "/absent":
+      return teacherOnly(u, () => teacherAbsent(u));
+    case "/assign":
+      return teacherOnly(u, () => teacherAssignStart(u));
+    case "/materials":
+      return teacherOnly(u, () => teacherMaterials(u));
+    case "/curriculum":
+      return teacherOnly(u, () => teacherCurriculum(u));
     case "/stats":
       if (u.kind !== "admin") return void sendMessage(u.chatId, "🔒 Bu buyruq faqat admin uchun.");
       return adminStats(u);
@@ -274,6 +404,7 @@ async function handleCommand(u: BotUser, text: string) {
       return void sendMessage(u.chatId, "❓ Bunday buyruq yo'q. /help ni bosing.");
   }
 }
+
 
 function teacherOnly(u: BotUser, fn: () => Promise<unknown> | unknown) {
   if (u.kind !== "teacher" && u.kind !== "admin")
@@ -285,14 +416,22 @@ function helpText(u: BotUser) {
   if (u.kind === "teacher" || u.kind === "admin")
     return `📖 <b>Ustoz buyruqlari</b>
 
-/students — guruhdagi o'quvchilar va bugungi holati
+/students — o'quvchilar va bugungi holat
+/groups — guruhlarim (kod, dars kunlari, o'quvchi soni)
+/student ISM — bitta o'quvchi bo'yicha to'liq ma'lumot
+/top — eng faol o'quvchilar reytingi
+/absent — bugun mashq qilmaganlar + eslatma yuborish
+/assign — yangi topshiriq berish
+/materials — dars materiallari
+/curriculum — dars rejasi holati
 /report — haftalik AI-xulosali hisobot
 /send — barcha guruhlarga xabar yuborish
 /schedule — xabarni belgilangan vaqtga rejalashtirish
-/invite — yangi o'quvchi uchun taklif havolasi
+/invite — guruhga qo'shilish kodlari
 /ask — AI'dan erkin savol (masalan: "Alisher haftada nechta so'z yodladi?")
 /profile — hisobingiz
 /menu — asosiy menyu${u.kind === "admin" ? "\n/stats — umumiy tizim statistikasi" : ""}`;
+
 
   return `📖 <b>Buyruqlar</b>
 
@@ -777,6 +916,15 @@ async function handleFreeText(u: BotUser, text: string) {
     return broadcast(u, text, null);
   }
 
+  if (mode === "student_search") {
+    await clearState(u.chatId, ["mode"]);
+    return teacherStudentCard(u, text);
+  }
+
+  if (mode === "assign") return teacherAssignSave(u, text);
+
+
+
   if (mode === "schedule") {
     const m = text.match(/^(\d{1,2}):(\d{2})\s+([\s\S]+)$/);
     if (!m) return void sendMessage(u.chatId, "❌ Format noto'g'ri. Masalan: <code>09:00 Matn</code>");
@@ -818,18 +966,81 @@ async function handleCallback(cb: TgCallback) {
   const chatId = cb.message?.chat.id;
   if (!chatId) return void answerCallback(cb.id);
   const u = await findUserByChat(chatId);
+
   if (!u) {
     await answerCallback(cb.id);
-    return void sendMessage(chatId, NEEDS_LINK);
+    const d = cb.data ?? "";
+    const p = await parentByChat(chatId);
+    if (p) {
+      if (d.startsWith("pi:")) return parentItem(chatId, p, d.slice(3));
+      if (d.startsWith("pf:")) return parentSetting(chatId, p, d.slice(3));
+      if (d.startsWith("pr:")) return parentItem(chatId, p, d === "pr:today" ? "a_today" : "p_week");
+      return parentMenu(chatId, p);
+    }
+    if (d === "reg:help") return registrationHelp(chatId);
+    if (d === "reg:start") return startRegistration(chatId);
+    return handleUnregistered(chatId, cb.from.username, "");
   }
   const data = cb.data ?? "";
   await answerCallback(cb.id);
+
+  // Yangi qurilma tasdiqlash / rad etish
+  if (data.startsWith("dv:")) {
+    const [, act, id] = data.split(":");
+    const approve = act === "ok";
+    const r = await resolveDevice(id!, u.userId, approve);
+    if (!r.ok) return void sendMessage(chatId, "❌ Qurilma topilmadi.");
+    return void sendMessage(
+      chatId,
+      approve
+        ? "✅ Rahmat! Qurilma ishonchli deb belgilandi."
+        : "🚫 Kirish bekor qilindi va sessiya tugatildi. Hisobingiz xavfsiz.",
+    );
+  }
+
+  if (data.startsWith("poke:")) return teacherOnly(u, () => pokeStudent(u, data.slice(5)));
+
+
+  // Saytga kirish so'rovini tasdiqlash / rad etish
+  if (data.startsWith("la:") || data.startsWith("ln:")) {
+    const id = data.slice(3);
+    const approve = data.startsWith("la:");
+    const { data: req } = await supabaseAdmin
+      .from("login_requests")
+      .select("id, account_id, status, expires_at")
+      .eq("id", id)
+      .maybeSingle();
+    if (!req) return void sendMessage(chatId, "❌ So'rov topilmadi.");
+    const { data: acc } = await supabaseAdmin
+      .from("app_accounts")
+      .select("user_id")
+      .eq("id", req.account_id as string)
+      .maybeSingle();
+    if (!acc || acc.user_id !== u.userId)
+      return void sendMessage(chatId, "🔒 Bu so'rov sizga tegishli emas.");
+    if (req.status !== "pending") return void sendMessage(chatId, "ℹ️ Bu so'rov allaqachon yopilgan.");
+    if (new Date(req.expires_at as string) < new Date()) {
+      await supabaseAdmin.from("login_requests").update({ status: "expired" }).eq("id", id);
+      return void sendMessage(chatId, "⌛ So'rov muddati tugagan. Saytda qaytadan urinib ko'ring.");
+    }
+    await supabaseAdmin
+      .from("login_requests")
+      .update({ status: approve ? "approved" : "denied" })
+      .eq("id", id);
+    return void sendMessage(
+      chatId,
+      approve
+        ? "✅ Tasdiqlandi! Saytga qaytib qarang — avtomatik kirasiz."
+        : "🚫 Rad etildi. Hisobingiz xavfsiz.",
+    );
+  }
 
   if (data === "words") return todaysWords(u);
   if (data === "quiz") return startQuiz(u);
   if (data === "progress") return progress(u);
   if (data === "vocab") return favorites(u);
   if (data === "assignments") return assignments(u);
+
   if (data === "settings") return settings(u);
   if (data === "story") return story(u);
   if (data === "weak") return weakSpots(u);
@@ -837,6 +1048,13 @@ async function handleCallback(cb: TgCallback) {
   if (data === "students") return teacherOnly(u, () => students(u));
   if (data === "report") return teacherOnly(u, () => report(u));
   if (data === "invite") return teacherOnly(u, () => invite(u));
+  if (data === "groups") return teacherOnly(u, () => teacherGroupsList(u));
+  if (data === "top") return teacherOnly(u, () => teacherTop(u));
+  if (data === "absent") return teacherOnly(u, () => teacherAbsent(u));
+  if (data === "assign") return teacherOnly(u, () => teacherAssignStart(u));
+  if (data === "materials") return teacherOnly(u, () => teacherMaterials(u));
+  if (data === "curriculum") return teacherOnly(u, () => teacherCurriculum(u));
+
   if (data === "send")
     return teacherOnly(u, async () => {
       await setState(u.chatId, { mode: "send" });

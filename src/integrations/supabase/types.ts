@@ -380,25 +380,49 @@ export type Database = {
           active: boolean
           added_by: string | null
           api_key: string
+          calls_day: string | null
+          calls_today: number
+          calls_total: number
+          cooldown_until: string | null
           created_at: string
           id: string
           label: string | null
+          last_error: string | null
+          last_ok_at: string | null
+          owner_id: string | null
+          scope: string
         }
         Insert: {
           active?: boolean
           added_by?: string | null
           api_key: string
+          calls_day?: string | null
+          calls_today?: number
+          calls_total?: number
+          cooldown_until?: string | null
           created_at?: string
           id?: string
           label?: string | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          owner_id?: string | null
+          scope?: string
         }
         Update: {
           active?: boolean
           added_by?: string | null
           api_key?: string
+          calls_day?: string | null
+          calls_today?: number
+          calls_total?: number
+          cooldown_until?: string | null
           created_at?: string
           id?: string
           label?: string | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          owner_id?: string | null
+          scope?: string
         }
         Relationships: []
       }
@@ -505,6 +529,168 @@ export type Database = {
         }
         Relationships: []
       }
+      ielts_attempts: {
+        Row: {
+          band: number | null
+          created_at: string
+          detail: Json
+          id: string
+          mock_id: string | null
+          raw_score: number | null
+          skill: string
+          total: number | null
+          user_id: string
+          variant: string
+        }
+        Insert: {
+          band?: number | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          mock_id?: string | null
+          raw_score?: number | null
+          skill: string
+          total?: number | null
+          user_id: string
+          variant?: string
+        }
+        Update: {
+          band?: number | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          mock_id?: string | null
+          raw_score?: number | null
+          skill?: string
+          total?: number | null
+          user_id?: string
+          variant?: string
+        }
+        Relationships: []
+      }
+      ielts_materials: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          payload: Json
+          section: number
+          source: string
+          title: string
+          topic: string | null
+          uses: number
+          variant: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          payload: Json
+          section?: number
+          source?: string
+          title: string
+          topic?: string | null
+          uses?: number
+          variant?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          payload?: Json
+          section?: number
+          source?: string
+          title?: string
+          topic?: string | null
+          uses?: number
+          variant?: string
+        }
+        Relationships: []
+      }
+      ielts_sessions: {
+        Row: {
+          id: string
+          material_ids: string[]
+          mock_id: string | null
+          practice: boolean
+          prompt: Json | null
+          skill: string
+          started_at: string
+          submitted_at: string | null
+          user_id: string
+          variant: string
+        }
+        Insert: {
+          id?: string
+          material_ids?: string[]
+          mock_id?: string | null
+          practice?: boolean
+          prompt?: Json | null
+          skill: string
+          started_at?: string
+          submitted_at?: string | null
+          user_id: string
+          variant?: string
+        }
+        Update: {
+          id?: string
+          material_ids?: string[]
+          mock_id?: string | null
+          practice?: boolean
+          prompt?: Json | null
+          skill?: string
+          started_at?: string
+          submitted_at?: string | null
+          user_id?: string
+          variant?: string
+        }
+        Relationships: []
+      }
+      known_devices: {
+        Row: {
+          approved: boolean
+          city: string | null
+          created_at: string
+          fingerprint: string
+          id: string
+          ip: string | null
+          label: string | null
+          last_seen_at: string
+          revoked: boolean
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          city?: string | null
+          created_at?: string
+          fingerprint: string
+          id?: string
+          ip?: string | null
+          label?: string | null
+          last_seen_at?: string
+          revoked?: boolean
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          city?: string | null
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          ip?: string | null
+          label?: string | null
+          last_seen_at?: string
+          revoked?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       league_history: {
         Row: {
           created_at: string
@@ -558,6 +744,62 @@ export type Database = {
           word?: string
         }
         Relationships: []
+      }
+      login_bans: {
+        Row: {
+          created_at: string
+          ip: string
+          reason: string | null
+          until: string
+        }
+        Insert: {
+          created_at?: string
+          ip: string
+          reason?: string | null
+          until: string
+        }
+        Update: {
+          created_at?: string
+          ip?: string
+          reason?: string | null
+          until?: string
+        }
+        Relationships: []
+      }
+      login_requests: {
+        Row: {
+          account_id: string
+          created_at: string
+          device: string | null
+          expires_at: string
+          id: string
+          status: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          device?: string | null
+          expires_at?: string
+          id?: string
+          status?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          device?: string | null
+          expires_at?: string
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "app_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mistakes: {
         Row: {
@@ -633,6 +875,47 @@ export type Database = {
           },
         ]
       }
+      parent_links: {
+        Row: {
+          account_id: string
+          active: boolean
+          created_at: string
+          id: string
+          linked_at: string | null
+          notify_freq: string
+          telegram_id: number | null
+          token: string
+        }
+        Insert: {
+          account_id: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          linked_at?: string | null
+          notify_freq?: string
+          telegram_id?: number | null
+          token: string
+        }
+        Update: {
+          account_id?: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          linked_at?: string | null
+          notify_freq?: string
+          telegram_id?: number | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_links_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "app_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -644,6 +927,8 @@ export type Database = {
           difficulty: string
           email: string | null
           gender: string | null
+          ielts_target_band: number | null
+          ielts_variant: string
           last_freeze_used: string | null
           last_streak_reward: number
           last_view: string | null
@@ -685,6 +970,8 @@ export type Database = {
           difficulty?: string
           email?: string | null
           gender?: string | null
+          ielts_target_band?: number | null
+          ielts_variant?: string
           last_freeze_used?: string | null
           last_streak_reward?: number
           last_view?: string | null
@@ -726,6 +1013,8 @@ export type Database = {
           difficulty?: string
           email?: string | null
           gender?: string | null
+          ielts_target_band?: number | null
+          ielts_variant?: string
           last_freeze_used?: string | null
           last_streak_reward?: number
           last_view?: string | null
@@ -1089,6 +1378,41 @@ export type Database = {
           update_id?: number
         }
         Relationships: []
+      }
+      tg_login_codes: {
+        Row: {
+          account_id: string
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          used_at: string | null
+        }
+        Insert: {
+          account_id: string
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          used_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tg_login_codes_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "app_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_purchases: {
         Row: {

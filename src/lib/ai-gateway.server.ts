@@ -13,7 +13,7 @@ const RATE_LIMIT_COOLDOWN_MS = 65_000; // Gemini free-tier limits reset per minu
 const INVALID_KEY_COOLDOWN_MS = 30 * 60_000;
 const cooldown = new Map<string, number>();
 
-type DbKey = { key: string; owner: string | null; shared: boolean };
+type DbKey = { id: string; key: string; owner: string | null; scope: string };
 let dbKeysCache: { keys: DbKey[]; at: number } = { keys: [], at: 0 };
 const DB_CACHE_MS = 20_000;
 
@@ -34,25 +34,19 @@ async function dbKeys(): Promise<DbKey[]> {
   if (now - dbKeysCache.at < DB_CACHE_MS) return dbKeysCache.keys;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data }, { data: admins }] = await Promise.all([
-      supabaseAdmin
-        .from("gemini_keys")
-        .select("api_key, added_by")
-        .eq("active", true)
-        .order("created_at", { ascending: true }),
-      supabaseAdmin.from("app_accounts").select("user_id").eq("kind", "admin"),
-    ]);
-    const adminIds = new Set(
-      (admins ?? []).map((a) => a.user_id).filter((v): v is string => typeof v === "string"),
-    );
+    const { data } = await supabaseAdmin
+      .from("gemini_keys")
+      .select("id, api_key, added_by, owner_id, scope")
+      .eq("active", true)
+      .order("created_at", { ascending: true });
     const keys = (data ?? [])
       .filter((r) => !!r.api_key)
-      .map((r) => {
-        const owner = (r.added_by as string | null) ?? null;
-        // Only admin-connected (or env) keys are shared with everyone;
-        // a key a student connects is used for that student only.
-        return { key: r.api_key as string, owner, shared: !owner || adminIds.has(owner) };
-      });
+      .map((r) => ({
+        id: r.id as string,
+        key: r.api_key as string,
+        owner: (r.owner_id as string | null) ?? (r.added_by as string | null) ?? null,
+        scope: (r.scope as string | null) ?? "global",
+      }));
     dbKeysCache = { keys, at: now };
     return keys;
   } catch {
@@ -60,6 +54,48 @@ async function dbKeys(): Promise<DbKey[]> {
     return dbKeysCache.keys;
   }
 }
+
+/** Kalit muvaffaqiyatli ishladi — statistikani yangilaydi (admin paneli uchun). */
+async function recordOk(key: string) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabaseAdmin
+      .from("gemini_keys")
+      .select("id, calls_today, calls_total, calls_day")
+      .eq("api_key", key)
+      .maybeSingle();
+    if (!data) return;
+    const sameDay = data.calls_day === today;
+    await supabaseAdmin
+      .from("gemini_keys")
+      .update({
+        calls_today: (sameDay ? (data.calls_today ?? 0) : 0) + 1,
+        calls_total: (data.calls_total ?? 0) + 1,
+        calls_day: today,
+        last_ok_at: new Date().toISOString(),
+        last_error: null,
+        cooldown_until: null,
+      })
+      .eq("id", data.id as string);
+  } catch {
+    /* statistika muhim emas — asosiy oqim to'xtamaydi */
+  }
+}
+
+/** Kalitda xatolik/limit — sabab va kutish vaqti yozib qo'yiladi. */
+async function recordError(key: string, message: string, until: number) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("gemini_keys")
+      .update({ last_error: message.slice(0, 300), cooldown_until: new Date(until).toISOString() })
+      .eq("api_key", key);
+  } catch {
+    /* ignore */
+  }
+}
+
 
 export function markKeyExhausted(key: string, duration = RATE_LIMIT_COOLDOWN_MS) {
   cooldown.set(key, Date.now() + duration);
@@ -85,44 +121,36 @@ function isCooling(key: string) {
   return true;
 }
 
-/** Cooldown end timestamp (ms) for a key, or null when it is ready to use. */
-export function cooldownUntil(key: string): number | null {
-  const until = cooldown.get(key);
-  return until && until > Date.now() ? until : null;
-}
-
-export async function allKeys(): Promise<string[]> {
-  const keys = [...envKeys(), ...(await dbKeys()).map((k) => k.key)];
-  return Array.from(new Set(keys));
-}
-
-/** Pool size as seen by one user: shared keys + that user's own keys. */
-export async function keyPoolInfo(userId?: string) {
+/** Faqat umumiy (admin qo'shgan / env) kalitlar + `userId`ning shaxsiy kalitlari. */
+async function usableKeys(userId?: string): Promise<{ personal: string[]; shared: string[] }> {
   const db = await dbKeys();
-  const usable = Array.from(
-    new Set([
-      ...envKeys(),
-      ...db.filter((k) => k.shared || (userId && k.owner === userId)).map((k) => k.key),
-    ]),
-  );
-  return { total: usable.length, available: usable.filter((k) => !isCooling(k)).length };
+  const personal = userId
+    ? db.filter((k) => k.scope === "user" && k.owner === userId).map((k) => k.key)
+    : [];
+  const shared = Array.from(
+    new Set([...envKeys(), ...db.filter((k) => k.scope !== "user").map((k) => k.key)]),
+  ).filter((k) => !personal.includes(k));
+  return { personal, shared };
+}
+
+export async function allKeys(userId?: string): Promise<string[]> {
+  const { personal, shared } = await usableKeys(userId);
+  return Array.from(new Set([...personal, ...shared]));
+}
+
+export async function keyPoolInfo(userId?: string) {
+  const keys = await allKeys(userId);
+  const available = keys.filter((k) => !isCooling(k));
+  return { total: keys.length, available: available.length };
 }
 
 /**
  * B2 + B3 — build the try-order for one request:
- *  1. the caller's own connected keys first (personal keys before the shared pool),
+ *  1. the caller's own connected keys first (personal keys are private to them),
  *  2. then the shared pool rotated round-robin so parallel requests spread out.
- * Personal keys of *other* users are never used.
  */
 async function orderedKeys(userId?: string): Promise<{ order: string[]; total: number }> {
-  const db = await dbKeys();
-  const personal = userId ? db.filter((k) => k.owner === userId).map((k) => k.key) : [];
-  const shared = Array.from(
-    new Set([
-      ...envKeys(),
-      ...db.filter((k) => k.shared && !personal.includes(k.key)).map((k) => k.key),
-    ]),
-  );
+  const { personal, shared } = await usableKeys(userId);
 
   const start = shared.length > 0 ? rrCursor++ % shared.length : 0;
   const rotated = [...shared.slice(start), ...shared.slice(0, start)];
@@ -131,6 +159,7 @@ async function orderedKeys(userId?: string): Promise<{ order: string[]; total: n
   const order = [...personal, ...rotated].filter((k) => !isCooling(k));
   return { order: Array.from(new Set(order)), total };
 }
+
 
 // ---------------------------------------------------------------------------
 // Rotating fetch: B4 — a failing key is swapped for the next working one
@@ -174,6 +203,7 @@ function createRotatingFetch(userId?: string): typeof fetch {
 
       if (res.ok) {
         cooldown.delete(key);
+        void recordOk(key);
         return res;
       }
 
@@ -182,12 +212,15 @@ function createRotatingFetch(userId?: string): typeof fetch {
 
       if (res.status === 429 || /quota|resource_exhausted|rate limit/i.test(message)) {
         markKeyExhausted(key);
+        void recordError(key, message || "Limit tugadi (429)", Date.now() + RATE_LIMIT_COOLDOWN_MS);
         continue; // try the next key
       }
       if (res.status === 401 || res.status === 403) {
         markKeyExhausted(key, INVALID_KEY_COOLDOWN_MS);
+        void recordError(key, message || `Kalit qabul qilinmadi (${res.status})`, Date.now() + INVALID_KEY_COOLDOWN_MS);
         continue; // bad/expired key — skip it and try another
       }
+
       if (res.status === 402) {
         throw new Error("Gemini hisobida to'lov muammosi bor.");
       }
@@ -245,109 +278,111 @@ export async function validateGeminiKey(key: string): Promise<{ ok: boolean; err
 }
 
 // ---------------------------------------------------------------------------
-// Admin view of the pool
+// Admin: to'liq kalitlar hisoboti
 // ---------------------------------------------------------------------------
-export type KeyReport = {
-  id: string | null;
-  masked: string;
-  label: string | null;
-  source: "env" | "db";
-  scope: "umumiy" | "shaxsiy";
-  ownerId: string | null;
-  active: boolean;
-  createdAt: string | null;
-  cooldownUntil: string | null;
-  status: "ok" | "limit" | "invalid" | "unknown";
-  statusText: string;
-};
-
 export function maskKey(key: string) {
-  return key.length <= 12 ? `${key.slice(0, 4)}…` : `${key.slice(0, 8)}…${key.slice(-4)}`;
+  if (key.length <= 10) return "••••";
+  return `${key.slice(0, 6)}••••${key.slice(-4)}`;
 }
 
-/** Full picture of every key in the system, optionally live-checked at Google. */
-export async function keyReport(live: boolean): Promise<KeyReport[]> {
+/** Gemini kunlik limiti Tinch okeani yarim tunida (00:00 PT) qayta tiklanadi. */
+export function nextDailyReset(): string {
+  const now = new Date();
+  // PT = UTC-8 (qishda) — kunlik limit uchun yetarli aniqlik.
+  const ptNow = new Date(now.getTime() - 8 * 3600_000);
+  const next = new Date(
+    Date.UTC(ptNow.getUTCFullYear(), ptNow.getUTCMonth(), ptNow.getUTCDate() + 1, 0, 0, 0),
+  );
+  return new Date(next.getTime() + 8 * 3600_000).toISOString();
+}
+
+export type KeyReportRow = {
+  id: string;
+  masked: string;
+  label: string | null;
+  scope: string;
+  ownerName: string | null;
+  active: boolean;
+  status: "ishlayapti" | "kutish rejimida" | "o'chirilgan" | "hali ishlatilmagan";
+  cooldownUntil: string | null;
+  minuteResetIn: number | null;
+  callsToday: number;
+  callsTotal: number;
+  lastOkAt: string | null;
+  lastError: string | null;
+  createdAt: string;
+};
+
+export async function keysReport(): Promise<{
+  envKeys: number;
+  rows: KeyReportRow[];
+  dailyResetAt: string;
+  minuteWindowSec: number;
+}> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const [{ data: rows }, { data: admins }] = await Promise.all([
-    supabaseAdmin
-      .from("gemini_keys")
-      .select("id, api_key, label, added_by, active, created_at")
-      .order("created_at", { ascending: true }),
-    supabaseAdmin.from("app_accounts").select("user_id, login, kind"),
-  ]);
-  const accounts = new Map((admins ?? []).map((a) => [a.user_id as string, a]));
+  const { data } = await supabaseAdmin
+    .from("gemini_keys")
+    .select(
+      "id, api_key, label, scope, owner_id, added_by, active, created_at, calls_today, calls_total, calls_day, last_ok_at, last_error, cooldown_until",
+    )
+    .order("created_at", { ascending: true });
 
-  const items: (KeyReport & { raw: string })[] = [];
-
-  for (const k of envKeys()) {
-    items.push({
-      raw: k,
-      id: null,
-      masked: maskKey(k),
-      label: "Server sozlamasi (env)",
-      source: "env",
-      scope: "umumiy",
-      ownerId: null,
-      active: true,
-      createdAt: null,
-      cooldownUntil: null,
-      status: "unknown",
-      statusText: "",
-    });
+  const rows = data ?? [];
+  const ownerIds = Array.from(
+    new Set(rows.map((r) => (r.owner_id as string | null) ?? (r.added_by as string | null)).filter(Boolean)),
+  ) as string[];
+  const names = new Map<string, string>();
+  if (ownerIds.length) {
+    const { data: profs } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id, name")
+      .in("user_id", ownerIds);
+    for (const p of profs ?? []) names.set(p.user_id as string, (p.name as string | null) ?? "—");
   }
 
-  for (const r of rows ?? []) {
-    const owner = (r.added_by as string | null) ?? null;
-    const acc = owner ? accounts.get(owner) : undefined;
-    const isAdmin = !owner || acc?.kind === "admin";
-    items.push({
-      raw: r.api_key as string,
+  const today = new Date().toISOString().slice(0, 10);
+  const out: KeyReportRow[] = rows.map((r) => {
+    const key = r.api_key as string;
+    const until = cooldown.get(key) ?? (r.cooldown_until ? Date.parse(r.cooldown_until as string) : 0);
+    const cooling = until > Date.now();
+    const owner = (r.owner_id as string | null) ?? (r.added_by as string | null);
+    return {
       id: r.id as string,
-      masked: maskKey(r.api_key as string),
-      label: (r.label as string | null) ?? (acc ? `${acc.login} (${acc.kind})` : null),
-      source: "db",
-      scope: isAdmin ? "umumiy" : "shaxsiy",
-      ownerId: owner,
-      active: Boolean(r.active),
-      createdAt: (r.created_at as string | null) ?? null,
-      cooldownUntil: null,
-      status: "unknown",
-      statusText: "",
-    });
-  }
+      masked: maskKey(key),
+      label: (r.label as string | null) ?? null,
+      scope: (r.scope as string | null) ?? "global",
+      ownerName: owner ? (names.get(owner) ?? "—") : null,
+      active: !!r.active,
+      status: !r.active
+        ? "o'chirilgan"
+        : cooling
+          ? "kutish rejimida"
+          : r.last_ok_at
+            ? "ishlayapti"
+            : "hali ishlatilmagan",
+      cooldownUntil: cooling ? new Date(until).toISOString() : null,
+      minuteResetIn: cooling ? Math.max(0, Math.round((until - Date.now()) / 1000)) : null,
+      callsToday: r.calls_day === today ? ((r.calls_today as number) ?? 0) : 0,
+      callsTotal: (r.calls_total as number) ?? 0,
+      lastOkAt: (r.last_ok_at as string | null) ?? null,
+      lastError: (r.last_error as string | null) ?? null,
+      createdAt: r.created_at as string,
+    };
+  });
 
-  const out: KeyReport[] = [];
-  for (const it of items) {
-    const until = cooldownUntil(it.raw);
-    let status: KeyReport["status"] = until ? "limit" : "ok";
-    let statusText = until
-      ? `Limit tugagan — ${new Date(until).toLocaleTimeString("uz-UZ")} da qayta ochiladi`
-      : "Ishlayapti";
+  return {
+    envKeys: envKeys().length,
+    rows: out,
+    dailyResetAt: nextDailyReset(),
+    minuteWindowSec: Math.round(RATE_LIMIT_COOLDOWN_MS / 1000),
+  };
+}
 
-    if (live) {
-      const check = await validateGeminiKey(it.raw);
-      if (!check.ok) {
-        status = "invalid";
-        statusText = check.error ?? "Kalit ishlamayapti";
-      } else if (!until) {
-        status = "ok";
-        statusText = "Ishlayapti (tekshirildi)";
-      }
-    }
-
-    out.push({
-      id: it.id,
-      masked: it.masked,
-      label: it.label,
-      source: it.source,
-      scope: it.scope,
-      ownerId: it.ownerId,
-      active: it.active,
-      createdAt: it.createdAt,
-      cooldownUntil: until ? new Date(until).toISOString() : null,
-      status,
-      statusText,
-    });
-  }
-  return out;
+/**
+ * Kalit rotatsiyasi bilan ishlaydigan xom `fetch` — Gemini'ning
+ * OpenAI-mos endpointiga to'g'ridan-to'g'ri so'rov yuborish kerak bo'lganda
+ * (masalan IELTS Speaking audio tahlili) ishlatiladi.
+ */
+export function gatewayFetch(userId?: string): typeof fetch {
+  return createRotatingFetch(userId);
 }

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyProfile, saveMyProfile, markDailyProgress } from "@/lib/cloud-profile.functions";
-import { loadProfile, saveProfile, updateProfile } from "@/lib/profile";
+import { loadProfile, saveProfile, updateProfile, setProfileScope } from "@/lib/profile";
 import type { Profile } from "@/lib/types";
 
 export function useAuthUser() {
@@ -94,6 +94,7 @@ export function useSessionProfile() {
     if (!user) {
       if (syncedFor.current !== "anon") {
         syncedFor.current = "anon";
+        setProfileScope(null);
         setProfile({});
         setReady(true);
       }
@@ -102,6 +103,8 @@ export function useSessionProfile() {
 
     if (syncedFor.current === user.id) return;
     syncedFor.current = user.id;
+    // Each account keeps its own local cache, so a new login always onboards.
+    setProfileScope(user.id);
     setReady(false);
 
     (async () => {

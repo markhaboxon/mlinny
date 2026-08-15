@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DuelRouteImport } from './routes/duel'
 import { Route as GroupRouteImport } from './routes/group'
+import { Route as IeltsRouteImport } from './routes/ielts'
 import { Route as LeagueRouteImport } from './routes/league'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as StoryRouteImport } from './routes/story'
@@ -44,6 +45,11 @@ const DuelRoute = DuelRouteImport.update({
 const GroupRoute = GroupRouteImport.update({
   id: '/group',
   path: '/group',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IeltsRoute = IeltsRouteImport.update({
+  id: '/ielts',
+  path: '/ielts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeagueRoute = LeagueRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
+  '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
+  '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
+  '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/duel'
     | '/group'
+    | '/ielts'
     | '/league'
     | '/shop'
     | '/story'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/duel'
     | '/group'
+    | '/ielts'
     | '/league'
     | '/shop'
     | '/story'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/duel'
     | '/group'
+    | '/ielts'
     | '/league'
     | '/shop'
     | '/story'
@@ -225,6 +237,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DuelRoute: typeof DuelRoute
   GroupRoute: typeof GroupRoute
+  IeltsRoute: typeof IeltsRoute
   LeagueRoute: typeof LeagueRoute
   ShopRoute: typeof ShopRoute
   StoryRoute: typeof StoryRoute
@@ -267,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/group'
       fullPath: '/group'
       preLoaderRoute: typeof GroupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ielts': {
+      id: '/ielts'
+      path: '/ielts'
+      fullPath: '/ielts'
+      preLoaderRoute: typeof IeltsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/league': {
@@ -361,6 +381,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DuelRoute: DuelRoute,
   GroupRoute: GroupRoute,
+  IeltsRoute: IeltsRoute,
   LeagueRoute: LeagueRoute,
   ShopRoute: ShopRoute,
   StoryRoute: StoryRoute,

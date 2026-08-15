@@ -33,7 +33,6 @@ import CurriculumTab from "@/components/teacher/CurriculumTab";
 import MaterialsTab from "@/components/teacher/MaterialsTab";
 import ReportTab from "@/components/teacher/ReportTab";
 import AiToolsTab from "@/components/teacher/AiToolsTab";
-import MessagingTab from "@/components/teacher/MessagingTab";
 import { useAuthUser } from "@/hooks/useCloudSync";
 import { useRequireRole } from "@/hooks/useRequireRole";
 
@@ -52,7 +51,7 @@ export const Route = createFileRoute("/teacher/$groupId")({
   component: GroupPage,
 });
 
-type Tab = "xulosa" | "oquvchilar" | "topshiriq" | "xabar" | "dastur" | "material" | "hisobot" | "ai";
+type Tab = "xulosa" | "oquvchilar" | "topshiriq" | "dastur" | "material" | "hisobot" | "ai";
 
 interface Summary {
   total_students: number;
@@ -252,7 +251,6 @@ function GroupPage() {
               ["xulosa", "Xulosa"],
               ["oquvchilar", "O'quvchilar"],
               ["topshiriq", "Topshiriqlar"],
-              ["xabar", "Xabarlar"],
               ["dastur", "Dars dasturi"],
               ["material", "Materiallar"],
               ["hisobot", "Hisobot"],
@@ -409,7 +407,6 @@ function GroupPage() {
         )}
 
         {tab === "topshiriq" && <AssignmentsTab groupId={groupId} students={students} />}
-        {tab === "xabar" && <MessagingTab groupId={groupId} />}
         {tab === "dastur" && <CurriculumTab groupId={groupId} />}
         {tab === "material" && <MaterialsTab groupId={groupId} groups={groups} />}
         {tab === "hisobot" && (

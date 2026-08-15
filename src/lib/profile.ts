@@ -1,13 +1,49 @@
 import type { Profile, MistakeItem } from "./types";
 
-const KEY = "eng_learn_profile_v1";
+const BASE_KEY = "eng_learn_profile_v1";
+const SCOPE_KEY = "eng_learn_profile_scope";
 
 const isBrowser = () => typeof window !== "undefined";
+
+/**
+ * Local profile cache is scoped per signed-in account. Without this, a second
+ * account signing in on the same device would inherit the first account's
+ * onboarding (name / age / gender) and skip the onboarding flow.
+ */
+function currentScope(): string {
+  if (!isBrowser()) return "anon";
+  try {
+    return window.localStorage.getItem(SCOPE_KEY) || "anon";
+  } catch {
+    return "anon";
+  }
+}
+
+function storageKey(): string {
+  const scope = currentScope();
+  return scope === "anon" ? BASE_KEY : `${BASE_KEY}:${scope}`;
+}
+
+/** Point local profile storage at a specific account (or `null` for anonymous). */
+export function setProfileScope(userId: string | null) {
+  if (!isBrowser()) return;
+  try {
+    const next = userId ?? "anon";
+    if (window.localStorage.getItem(SCOPE_KEY) === next) return;
+    window.localStorage.setItem(SCOPE_KEY, next);
+    // A brand-new account must start from an empty local cache.
+    if (next !== "anon" && !window.localStorage.getItem(`${BASE_KEY}:${next}`)) {
+      window.localStorage.setItem(`${BASE_KEY}:${next}`, "{}");
+    }
+  } catch {
+    // ignore
+  }
+}
 
 export function loadProfile(): Profile {
   if (!isBrowser()) return {};
   try {
-    const raw = window.localStorage.getItem(KEY);
+    const raw = window.localStorage.getItem(storageKey());
     if (!raw) return {};
     return JSON.parse(raw) as Profile;
   } catch {
@@ -18,11 +54,12 @@ export function loadProfile(): Profile {
 export function saveProfile(p: Profile) {
   if (!isBrowser()) return;
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(p));
+    window.localStorage.setItem(storageKey(), JSON.stringify(p));
   } catch {
     // ignore
   }
 }
+
 
 export function updateProfile(patch: Partial<Profile>): Profile {
   const cur = loadProfile();

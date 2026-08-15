@@ -8,8 +8,8 @@ import {
   issueLink,
   moveStudentAccount,
   removeStudentAccount,
-  resetAccountPasswordFn,
 } from "@/lib/access.functions";
+import { reissueAccountLinks } from "@/lib/onboard-links.functions";
 import { copyText, fmtTime, isOnline, linkFor } from "@/lib/clipboard";
 import type { GroupOverview } from "@/lib/teacher-ui";
 
@@ -27,7 +27,7 @@ export default function AccessTab({
   const linkFn = useServerFn(issueLink);
   const moveFn = useServerFn(moveStudentAccount);
   const removeFn = useServerFn(removeStudentAccount);
-  const resetPwFn = useServerFn(resetAccountPasswordFn);
+  const linksFn = useServerFn(reissueAccountLinks);
   const [count, setCount] = useState(1);
 
   const { data: rows = [], isLoading } = useQuery({
@@ -133,18 +133,19 @@ export default function AccessTab({
                     className="btn-ghost text-xs"
                     onClick={async () => {
                       try {
-                        const res = await resetPwFn({ data: { accountId: r.id } });
-                        const ok = await copyText(`Login: ${res.login}\nParol: ${res.password}`);
-                        toast.success(
-                          ok ? "Yangi parol nusxalandi" : `Yangi parol: ${res.password}`,
-                          { duration: 15000 },
-                        );
+                        const res = await linksFn({ data: { accountId: r.id } });
+                        const text =
+                          `👤 O'quvchi: ${res.loginUrl}` +
+                          (res.parentUrl ? `\n👪 Ota-ona: ${res.parentUrl}` : "");
+                        const ok = await copyText(text);
+                        toast.success(ok ? "Havolalar nusxalandi" : text, { duration: 20000 });
+                        qc.invalidateQueries({ queryKey: ["group-accounts", groupId] });
                       } catch (err) {
                         toast.error((err as Error).message);
                       }
                     }}
                   >
-                    Yangi parol
+                    🔗 Telegram havolalari
                   </button>
                   {otherGroups.length > 0 && (
                     <select

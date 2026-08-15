@@ -4,7 +4,7 @@ import { getGateway } from "@/lib/ai-gateway.server";
 import { AI_MODEL } from "@/lib/ai-model";
 import { generateText } from "ai";
 
-export const SITE_URL = "https://mlinny.lovable.app";
+export const SITE_URL = process.env["SITE_URL"]?.trim() || "https://linnyai.lovable.app";
 
 export type BotUser = {
   userId: string;

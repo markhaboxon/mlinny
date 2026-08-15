@@ -49,16 +49,30 @@ export function keyboard(rows: Button[][]) {
 export async function sendMessage(
   chatId: number | string,
   text: string,
-  opts: { buttons?: Button[][]; disablePreview?: boolean } = {},
+  opts: {
+    buttons?: Button[][];
+    /** Bottom (reply) keyboard rows — plain button labels. */
+    replyKeyboard?: string[][];
+    removeKeyboard?: boolean;
+    disablePreview?: boolean;
+  } = {},
 ) {
+  const markup = opts.buttons
+    ? keyboard(opts.buttons)
+    : opts.replyKeyboard
+      ? { keyboard: opts.replyKeyboard.map((r) => r.map((t) => ({ text: t }))), resize_keyboard: true }
+      : opts.removeKeyboard
+        ? { remove_keyboard: true }
+        : null;
   return call<{ message_id: number }>("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
     disable_web_page_preview: opts.disablePreview ?? true,
-    ...(opts.buttons ? { reply_markup: keyboard(opts.buttons) } : {}),
+    ...(markup ? { reply_markup: markup } : {}),
   });
 }
+
 
 export async function editMessage(
   chatId: number | string,
@@ -84,22 +98,16 @@ export async function sendChatAction(chatId: number | string, action = "typing")
   return call("sendChatAction", { chat_id: chatId, action });
 }
 
-export type BotCommand = { command: string; description: string };
-
-/**
- * Registers the "/" command list. Without a scope it sets the global default
- * list; with a chatId it sets a per-chat list, so a student never sees teacher
- * commands and vice versa.
- */
-export async function setCommands(commands: BotCommand[], chatId?: number | string) {
-  return call("setMyCommands", {
-    commands,
-    ...(chatId ? { scope: { type: "chat", chat_id: chatId } } : {}),
-  });
+export async function setCommands(commands: { command: string; description: string }[]) {
+  return call("setMyCommands", { commands });
 }
 
-export async function deleteChatCommands(chatId: number | string) {
-  return call("deleteMyCommands", { scope: { type: "chat", chat_id: chatId } });
+/** Per-chat command list — lets each role see only its own commands. */
+export async function setChatCommands(
+  chatId: number | string,
+  commands: { command: string; description: string }[],
+) {
+  return call("setMyCommands", { commands, scope: { type: "chat", chat_id: chatId } });
 }
 
 
