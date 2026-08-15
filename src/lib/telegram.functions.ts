@@ -70,12 +70,28 @@ export const setupTelegramWebhook = createServerFn({ method: "POST" })
     const { requireKind } = await import("./access.server");
     await requireKind(context.userId, ["admin"]);
     const { setWebhook, getWebhookInfo, setCommands } = await import("./telegram.server");
-    const { GUEST_COMMANDS } = await import("./bot/commands.server");
 
     const url = `${data.origin.replace(/\/$/, "")}/api/public/telegram/webhook`;
     const ok = await setWebhook(url);
-    // Default menu = guest only. Each linked chat gets its own role-based list.
-    await setCommands(GUEST_COMMANDS);
+    await setCommands([
+      { command: "start", description: "Boshlash / hisobni ulash" },
+      { command: "help", description: "Buyruqlar ro'yxati" },
+      { command: "words", description: "Bugungi so'zlar" },
+      { command: "quiz", description: "Tezkor viktorina" },
+      { command: "progress", description: "Progress" },
+      { command: "vocab", description: "Sevimli so'zlar" },
+      { command: "assignments", description: "Topshiriqlar" },
+      { command: "sentence", description: "Gap tuzish mashqi" },
+      { command: "story", description: "So'zlardan hikoya" },
+      { command: "weak", description: "Zaif joylar tahlili" },
+      { command: "ask", description: "AI'dan savol" },
+      { command: "settings", description: "Sozlamalar" },
+      { command: "students", description: "Ustoz: o'quvchilar" },
+      { command: "report", description: "Ustoz: hisobot" },
+      { command: "send", description: "Ustoz: xabar yuborish" },
+      { command: "schedule", description: "Ustoz: xabarni rejalashtirish" },
+      { command: "invite", description: "Ustoz: taklif kodlari" },
+    ]);
     const info = await getWebhookInfo();
     return { ok: !!ok, url, pendingUrl: String((info?.["url"] as string) ?? "") };
   });

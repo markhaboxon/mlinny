@@ -5,20 +5,25 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   adminStats,
-  createAccountFn,
-  issueLink,
   listAccounts,
   listActivity,
   myAccess,
   removeAccount,
-  resetAccountPasswordFn,
   setAccountActive,
 } from "@/lib/access.functions";
 import { KIND_LABEL } from "@/lib/auth-config";
 import { changeMyCredentials } from "@/lib/access.functions";
+import {
+  createLinkedAccount,
+  exportAccountLinks,
+  reissueAccountLinks,
+} from "@/lib/onboard-links.functions";
+
 import { setupTelegramWebhook } from "@/lib/telegram.functions";
 import ApiKeysSection from "@/components/admin/ApiKeysSection";
-import { copyText, fmtTime, isOnline, linkFor } from "@/lib/clipboard";
+
+
+import { copyText, fmtTime, isOnline } from "@/lib/clipboard";
 import { useAuthUser } from "@/hooks/useCloudSync";
 import { useRequireRole } from "@/hooks/useRequireRole";
 
@@ -37,7 +42,21 @@ export const Route = createFileRoute("/admin/")({
   component: AdminPage,
 });
 
-type NewAccount = { id: string; login: string; password: string; token: string } | null;
+type LinkResult = {
+  id: string;
+  fullName: string;
+  kind?: string;
+  loginUrl: string;
+  parentUrl: string | null;
+} | null;
+
+function bothText(r: NonNullable<LinkResult>) {
+  return (
+    `${r.fullName} uchun Linny AI hisoblari tayyor:\n\n` +
+    `🔵 O'quvchi uchun (o'zi kirishi uchun): ${r.loginUrl}` +
+    (r.parentUrl ? `\n🟢 Ota-ona uchun (kuzatib borishi uchun): ${r.parentUrl}` : "")
+  );
+}
 
 function AdminPage() {
   const user = useAuthUser();
@@ -49,10 +68,10 @@ function AdminPage() {
   const accountsFn = useServerFn(listAccounts);
   const activityFn = useServerFn(listActivity);
   const statsFn = useServerFn(adminStats);
-  const createFn = useServerFn(createAccountFn);
-  const linkFn = useServerFn(issueLink);
+  const createFn = useServerFn(createLinkedAccount);
+  const reissueFn = useServerFn(reissueAccountLinks);
+  const exportFn = useServerFn(exportAccountLinks);
   const activeFn = useServerFn(setAccountActive);
-  const resetPwFn = useServerFn(resetAccountPasswordFn);
   const removeFn = useServerFn(removeAccount);
   const credsFn = useServerFn(changeMyCredentials);
   const webhookFn = useServerFn(setupTelegramWebhook);
@@ -83,11 +102,10 @@ function AdminPage() {
     refetchInterval: 30000,
   });
 
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [kind, setKind] = useState("student");
-  const [fullName, setFullName] = useState("");
-  const [created, setCreated] = useState<NewAccount>(null);
+  const [created, setCreated] = useState<LinkResult>(null);
   const [filter, setFilter] = useState("");
   const [newLogin, setNewLogin] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -96,31 +114,26 @@ function AdminPage() {
     mutationFn: () =>
       createFn({
         data: {
-          login: login.trim(),
-          password,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           kind: kind as "admin" | "teacher" | "student" | "user",
-          fullName: fullName || undefined,
         },
       }),
     onSuccess: (r) => {
-      setCreated({ id: r.id, login: r.login, password, token: r.token });
-      setLogin("");
-      setPassword("");
-      setFullName("");
-      toast.success("Hisob yaratildi va bazaga yozildi");
+      setCreated(r);
+      setFirstName("");
+      setLastName("");
+      toast.success("Hisob yaratildi — havolalar faollashtirildi");
       qc.invalidateQueries({ queryKey: ["admin-accounts"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  async function sendLink(accountId: string, existing?: string) {
-    const token = existing ?? (await linkFn({ data: { accountId } })).token;
-    const ok = await copyText(linkFor(token));
-    if (ok) toast.success("Link nusxalandi");
-    else toast.error("Nusxalab bo'lmadi");
-    qc.invalidateQueries({ queryKey: ["admin-accounts"] });
-    return token;
+  async function copyOrShow(text: string, label: string) {
+    const ok = await copyText(text);
+    toast[ok ? "success" : "error"](ok ? `${label} nusxalandi` : text, { duration: 15000 });
   }
+
 
   const rows = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -197,34 +210,23 @@ function AdminPage() {
       </div>
 
       <section className="card-surface p-4">
-        <h2 className="font-bold">Yangi kirish qo'shish</h2>
-        <div className="mt-3 grid gap-3 md:grid-cols-4">
+        <h2 className="font-bold">Yangi hisob qo'shish (parolsiz)</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Login va parol kerak emas — saqlagandan keyin Telegram havolalari beriladi.
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
           <input
             className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-            placeholder="Login"
-            value={login}
-            onChange={(e) => setLogin(e.target.value)}
+            placeholder="Ism"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
           />
-          <div className="flex gap-2">
-            <input
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              placeholder="Parol"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn-ghost whitespace-nowrap"
-              title="Parol generatsiya qilish"
-              onClick={() =>
-                setPassword(
-                  Math.random().toString(36).slice(2, 6) + "-" + Math.random().toString(36).slice(2, 6),
-                )
-              }
-            >
-              🎲
-            </button>
-          </div>
+          <input
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+            placeholder="Familiya"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
           <select
             className="rounded-md border border-border bg-background px-3 py-2 text-sm"
             value={kind}
@@ -235,40 +237,47 @@ function AdminPage() {
             <option value="student">O'quvchi</option>
             <option value="user">Foydalanuvchi</option>
           </select>
-          <input
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-            placeholder="Ism (ixtiyoriy)"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
         </div>
         <button
           className="btn-primary mt-3 disabled:opacity-50"
-          disabled={login.trim().length < 3 || password.length < 4 || createMut.isPending}
+          disabled={!firstName.trim() || !lastName.trim() || createMut.isPending}
           onClick={() => createMut.mutate()}
         >
-          {createMut.isPending ? "Yaratilmoqda..." : "Yaratish"}
+          {createMut.isPending ? "⏳ Havolalar tayyorlanmoqda..." : "Saqlash"}
         </button>
 
         {created && (
-          <div className="mt-4 rounded-lg border border-border p-3 text-sm">
-            <div className="font-medium">Yaratildi:</div>
-            <div className="font-mono mt-1">
-              {created.login} / {created.password}
+          <div className="mt-4 rounded-lg border border-border p-3 text-sm space-y-3">
+            <div className="font-medium">✅ {created.fullName} — havolalar faol:</div>
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground">👤 O'zi kirishi uchun</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono break-all text-xs">{created.loginUrl}</span>
+                <button
+                  className="btn-ghost text-xs"
+                  onClick={() => copyOrShow(created.loginUrl, "O'quvchi havolasi")}
+                >
+                  Nusxalash
+                </button>
+              </div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button className="btn-primary" onClick={() => sendLink(created.id, created.token)}>
-                Yuborish (link nusxalash)
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={async () => {
-                  const ok = await copyText(`Login: ${created.login}\nParol: ${created.password}`);
-                  if (ok) toast.success("Nusxalandi");
-                  else toast.error("Nusxalab bo'lmadi");
-                }}
-              >
-                Login/parolni nusxalash
+            {created.parentUrl && (
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">👪 Ota-onasi kuzatishi uchun</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono break-all text-xs">{created.parentUrl}</span>
+                  <button
+                    className="btn-ghost text-xs"
+                    onClick={() => copyOrShow(created.parentUrl!, "Ota-ona havolasi")}
+                  >
+                    Nusxalash
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <button className="btn-primary" onClick={() => copyOrShow(bothText(created), "Ikkala havola")}>
+                📋 Ikkalasini birga nusxalash
               </button>
               <button className="btn-ghost" onClick={() => setCreated(null)}>
                 Yopish
@@ -278,16 +287,42 @@ function AdminPage() {
         )}
       </section>
 
+
       <section className="card-surface p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-bold">Hisoblar ({accounts.length})</h2>
-          <input
-            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
-            placeholder="Qidirish..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="btn-ghost text-xs"
+              title="Hali botga ulanmagan barcha hisoblarning havolalari"
+              onClick={async () => {
+                try {
+                  const r = await exportFn({ data: {} });
+                  if (!r.accounts.length) return void toast.info("Ulanmagan hisob yo'q");
+                  const text = r.accounts
+                    .map(
+                      (a) =>
+                        `${a.fullName}\n🔵 O'quvchi: ${a.loginUrl}` +
+                        (a.parentUrl ? `\n🟢 Ota-ona: ${a.parentUrl}` : ""),
+                    )
+                    .join("\n\n");
+                  await copyOrShow(text, `${r.accounts.length} ta havola`);
+                } catch (e) {
+                  toast.error((e as Error).message);
+                }
+              }}
+            >
+              📤 Barchasini eksport qilish
+            </button>
+            <input
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
+              placeholder="Qidirish..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+          </div>
         </div>
+
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">
@@ -316,28 +351,27 @@ function AdminPage() {
                   <td>{a.groupName ?? "—"}</td>
                   <td className="text-xs">{fmtTime(a.firstLoginAt)}</td>
                   <td className="text-xs">{fmtTime(a.lastSeenAt)}</td>
-                  <td className="text-xs">{a.link ? (a.link.used_at ? "ishlatilgan" : "faol") : "yo'q"}</td>
+                  <td className="text-xs">
+                    {a.link ? (a.link.used_at ? "✅ Bog'langan" : "faol havola") : "yo'q"}
+                  </td>
+
                   <td className="whitespace-nowrap">
-                    <button className="btn-ghost text-xs" onClick={() => sendLink(a.id)}>
-                      Yangilash
-                    </button>
                     <button
                       className="btn-ghost text-xs"
+                      title="Yangi Telegram havolalari (eskisi o'chadi)"
                       onClick={async () => {
                         try {
-                          const r = await resetPwFn({ data: { accountId: a.id } });
-                          const ok = await copyText(`Login: ${r.login}\nParol: ${r.password}`);
-                          toast.success(
-                            ok ? "Yangi parol nusxalandi" : `Yangi parol: ${r.password}`,
-                            { duration: 15000 },
-                          );
+                          const r = await reissueFn({ data: { accountId: a.id } });
+                          await copyOrShow(bothText(r), "Havolalar");
+                          qc.invalidateQueries({ queryKey: ["admin-accounts"] });
                         } catch (e) {
                           toast.error((e as Error).message);
                         }
                       }}
                     >
-                      Yangi parol
+                      🔗 Havolalar
                     </button>
+
                     <button
                       className="btn-ghost text-xs"
                       onClick={async () => {
@@ -413,6 +447,10 @@ function AdminPage() {
         </div>
       </section>
 
+      <ApiKeysSection />
+
+
+
       <section className="card-surface p-4">
         <h2 className="font-bold">Telegram bot</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -432,10 +470,6 @@ function AdminPage() {
           Webhook'ni ulash / yangilash
         </button>
       </section>
-
-      <ApiKeysSection enabled={isAdmin} />
-
-
 
       <section className="card-surface p-4">
         <h2 className="font-bold">Faollik hisoboti</h2>

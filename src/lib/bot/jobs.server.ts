@@ -20,6 +20,9 @@ export async function runJobs() {
   if (hour === 19) results.push(`teacher-daily: ${await teacherDaily(day)}`);
   if (hour === 18 && new Date().getUTCDay() === 0) results.push(`weekly: ${await teacherWeekly(day)}`);
   if (hour === 10) results.push(`inactive: ${await inactivityAlerts(day)}`);
+  if (hour === 19) results.push(`parents-daily: ${await parentReports("daily", day)}`);
+  if (hour === 18 && new Date().getUTCDay() === 0)
+    results.push(`parents-weekly: ${await parentReports("weekly", day)}`);
   results.push(`scheduled: ${await sendScheduled()}`);
 
   return results;
@@ -218,6 +221,31 @@ async function inactivityAlerts(day: string) {
       chat,
       `⚠️ <b>${esc(g.name)} — nofaol o'quvchilar (3+ kun)</b>\n\n${idle.map((p) => `• ${esc(p.name ?? "Ismsiz")} — oxirgi: ${p.last_visit ?? "hech qachon"}`).join("\n")}`,
     );
+    sent++;
+  }
+  return sent;
+}
+
+/** Ota-onalarga notify_freq bo'yicha avtomatik hisobot. */
+async function parentReports(freq: "daily" | "weekly", day: string) {
+  const { parentByChat, parentItem } = await import("./parent.server");
+  const { data: links } = await supabaseAdmin
+    .from("parent_links")
+    .select("id, telegram_id")
+    .eq("active", true)
+    .eq("notify_freq", freq)
+    .not("telegram_id", "is", null);
+  let sent = 0;
+  for (const l of links ?? []) {
+    const chat = l.telegram_id as number;
+    if (!(await claimJob(`parent:${freq}:${l.id}:${day}`))) continue;
+    const p = await parentByChat(chat);
+    if (!p) continue;
+    await sendMessage(
+      chat,
+      freq === "daily" ? "🔔 <b>Kunlik hisobot</b>" : "🔔 <b>Haftalik hisobot</b>",
+    );
+    await parentItem(chat, p, freq === "daily" ? "a_today" : "p_week");
     sent++;
   }
   return sent;

@@ -1,135 +1,137 @@
-import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { adminDeleteKey, adminKeyReport, adminSetKeyActive } from "@/lib/keys.functions";
+import { adminKeysReport, adminToggleKey } from "@/lib/keys.functions";
+import { openApiKeyDialog } from "@/components/ApiKeyDialog";
 
-/** Admin: butun tizimdagi Gemini API kalitlari — holati, egasi, limit tiklanishi. */
-export default function ApiKeysSection({ enabled }: { enabled: boolean }) {
+function fmt(v: string | null) {
+  if (!v) return "—";
+  return new Date(v).toLocaleString("uz-UZ", { dateStyle: "short", timeStyle: "short" });
+}
+
+const STATUS_STYLE: Record<string, string> = {
+  ishlayapti: "text-emerald-600",
+  "kutish rejimida": "text-amber-600",
+  "o'chirilgan": "text-muted-foreground",
+  "hali ishlatilmagan": "text-sky-600",
+};
+
+/** Admin: umumiy bazadagi barcha API kalitlar bo'yicha to'liq hisobot. */
+export default function ApiKeysSection() {
   const qc = useQueryClient();
-  const reportFn = useServerFn(adminKeyReport);
-  const toggleFn = useServerFn(adminSetKeyActive);
-  const deleteFn = useServerFn(adminDeleteKey);
-  const [live, setLive] = useState(false);
+  const reportFn = useServerFn(adminKeysReport);
+  const toggleFn = useServerFn(adminToggleKey);
 
-  const { data, isFetching, refetch } = useQuery({
-    queryKey: ["admin-keys", live],
-    queryFn: () => reportFn({ data: { live } }),
-    enabled,
-    refetchInterval: 60000,
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-keys"],
+    queryFn: () => reportFn(),
+    refetchInterval: 20000,
   });
 
-  const toggleMut = useMutation({
-    mutationFn: (v: { id: string; active: boolean }) => toggleFn({ data: v }),
+  const mut = useMutation({
+    mutationFn: (v: { id: string; active?: boolean; remove?: boolean }) => toggleFn({ data: v }),
     onSuccess: () => {
-      toast.success("Kalit holati yangilandi");
+      toast.success("Saqlandi");
       qc.invalidateQueries({ queryKey: ["admin-keys"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const delMut = useMutation({
-    mutationFn: (id: string) => deleteFn({ data: { id } }),
-    onSuccess: () => {
-      toast.success("Kalit o'chirildi");
-      qc.invalidateQueries({ queryKey: ["admin-keys"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const keys = data?.keys ?? [];
+  const rows = data?.rows ?? [];
+  const working = rows.filter((r) => r.status === "ishlayapti").length;
+  const cooling = rows.filter((r) => r.status === "kutish rejimida").length;
+  const global = rows.filter((r) => r.scope !== "user").length;
+  const personal = rows.length - global;
+  const callsToday = rows.reduce((s, r) => s + r.callsToday, 0);
 
   return (
     <section className="card-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-bold">API kalitlar ({data?.total ?? 0})</h2>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1 text-xs text-muted-foreground">
-            <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
-            Google'dan jonli tekshirish
-          </label>
-          <button className="btn-ghost text-xs" onClick={() => refetch()} disabled={isFetching}>
-            {isFetching ? "Tekshirilmoqda..." : "Yangilash"}
-          </button>
+        <div>
+          <h2 className="font-bold">API kalitlar ({rows.length + (data?.envKeys ?? 0)})</h2>
+          <p className="text-sm text-muted-foreground">
+            Umumiy bazadagi barcha Gemini kalitlari, holati va limit hisobi.
+          </p>
+        </div>
+        <button className="btn-primary text-sm" onClick={() => openApiKeyDialog(false)}>
+          ➕ Yangi kalit ulash (umumiy)
+        </button>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
+        <Box label="Ishlayapti" value={working} />
+        <Box label="Kutish rejimida" value={cooling} />
+        <Box label="Umumiy kalit" value={global + (data?.envKeys ?? 0)} />
+        <Box label="Shaxsiy kalit" value={personal} />
+        <Box label="Bugungi so'rovlar" value={callsToday} />
+      </div>
+
+      <div className="mt-3 rounded-lg border border-border p-3 text-xs text-muted-foreground space-y-1">
+        <div>
+          ⏱ <b>Daqiqalik limit</b> har <b>{data?.minuteWindowSec ?? 65} soniya</b>dan keyin qayta tiklanadi —
+          limitga urilgan kalit shu vaqtdan keyin avtomatik qaytadi.
+        </div>
+        <div>
+          📅 <b>Kunlik limit</b> Tinch okeani yarim tunida qayta beriladi — sizning vaqtingizda:{" "}
+          <b>{fmt(data?.dailyResetAt ?? null)}</b>.
+        </div>
+        <div>
+          🔐 Server maxfiy kalitlari (env): <b>{data?.envKeys ?? 0}</b> ta — ular jadvalda ko'rsatilmaydi.
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5 text-center text-sm">
-        <Stat label="Jami" value={data?.total ?? 0} />
-        <Stat label="Ishlayapti" value={data?.working ?? 0} />
-        <Stat label="Limitda" value={data?.limited ?? 0} />
-        <Stat label="Nosoz" value={data?.broken ?? 0} />
-        <Stat label="Umumiy / shaxsiy" value={`${data?.shared ?? 0} / ${data?.personal ?? 0}`} />
-      </div>
-
-      <p className="mt-3 text-xs text-muted-foreground">
-        Gemini bepul limiti har daqiqada tiklanadi. Limitga urilgan kalit ~65 soniya kutish rejimiga
-        o'tadi, noto'g'ri kalit esa 30 daqiqaga chetlatiladi. Admin qo'shgan kalitlar butun tizim uchun
-        umumiy, o'quvchi qo'shgani faqat o'ziga ishlaydi.
-      </p>
-
-      {keys.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Hozircha kalit yo'q.</p>
+      {isLoading ? (
+        <p className="mt-3 text-sm text-muted-foreground">Yuklanmoqda...</p>
+      ) : rows.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">Hali bazada API kalit yo'q.</p>
       ) : (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-xs text-muted-foreground">
-              <tr className="text-left">
-                <th className="py-1 pr-3">Kalit</th>
-                <th className="py-1 pr-3">Turi</th>
-                <th className="py-1 pr-3">Egasi / izoh</th>
-                <th className="py-1 pr-3">Holati</th>
-                <th className="py-1 pr-3">Limit tiklanishi</th>
-                <th className="py-1 pr-3">Qo'shilgan</th>
-                <th className="py-1"></th>
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="py-2">Kalit</th>
+                <th>Turi</th>
+                <th>Egasi</th>
+                <th>Holati</th>
+                <th>Qayta tiklanadi</th>
+                <th>Bugun</th>
+                <th>Jami</th>
+                <th>Oxirgi ishlatilgan</th>
+                <th>Oxirgi xato</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {keys.map((k, i) => (
-                <tr key={k.id ?? `env-${i}`} className="border-t border-border/60">
-                  <td className="py-2 pr-3 font-mono text-xs">{k.masked}</td>
-                  <td className="py-2 pr-3">{k.scope}</td>
-                  <td className="py-2 pr-3">{k.label ?? "—"}</td>
-                  <td className="py-2 pr-3">
-                    <span
-                      className={
-                        !k.active
-                          ? "text-muted-foreground"
-                          : k.status === "ok"
-                            ? "text-emerald-600"
-                            : k.status === "limit"
-                              ? "text-amber-600"
-                              : "text-destructive"
-                      }
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t border-border/60 align-top">
+                  <td className="py-2 font-mono text-xs">{r.masked}</td>
+                  <td className="text-xs">{r.scope === "user" ? "👤 shaxsiy" : "🌐 umumiy"}</td>
+                  <td className="text-xs">{r.ownerName ?? "—"}</td>
+                  <td className={`text-xs font-semibold ${STATUS_STYLE[r.status] ?? ""}`}>{r.status}</td>
+                  <td className="text-xs">
+                    {r.minuteResetIn != null ? `${r.minuteResetIn} soniyadan keyin` : "—"}
+                  </td>
+                  <td className="text-xs">{r.callsToday}</td>
+                  <td className="text-xs">{r.callsTotal}</td>
+                  <td className="text-xs">{fmt(r.lastOkAt)}</td>
+                  <td className="text-xs max-w-[220px] break-words text-red-600/80">
+                    {r.lastError ?? "—"}
+                  </td>
+                  <td className="whitespace-nowrap">
+                    <button
+                      className="btn-ghost text-xs"
+                      onClick={() => mut.mutate({ id: r.id, active: !r.active })}
                     >
-                      {!k.active ? "O'chirilgan" : k.statusText}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-3">
-                    {k.cooldownUntil ? new Date(k.cooldownUntil).toLocaleTimeString("uz-UZ") : "—"}
-                  </td>
-                  <td className="py-2 pr-3">
-                    {k.createdAt ? new Date(k.createdAt).toLocaleDateString("uz-UZ") : "env"}
-                  </td>
-                  <td className="py-2 text-right whitespace-nowrap">
-                    {k.id && (
-                      <>
-                        <button
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                          onClick={() => toggleMut.mutate({ id: k.id!, active: !k.active })}
-                        >
-                          {k.active ? "O'chirish" : "Yoqish"}
-                        </button>
-                        <button
-                          className="ml-3 text-xs text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            if (confirm("Bu kalit butunlay o'chirilsinmi?")) delMut.mutate(k.id!);
-                          }}
-                        >
-                          Bazadan o'chirish
-                        </button>
-                      </>
-                    )}
+                      {r.active ? "O'chirish" : "Yoqish"}
+                    </button>
+                    <button
+                      className="btn-ghost text-xs text-red-600"
+                      onClick={() => {
+                        if (confirm("Kalit butunlay o'chirilsinmi?")) mut.mutate({ id: r.id, remove: true });
+                      }}
+                    >
+                      Olib tashlash
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -141,11 +143,11 @@ export default function ApiKeysSection({ enabled }: { enabled: boolean }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
+function Box({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-border p-2">
-      <div className="text-lg font-bold">{value}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-lg font-bold">{value}</div>
     </div>
   );
 }

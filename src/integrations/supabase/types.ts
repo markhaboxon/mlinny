@@ -380,25 +380,49 @@ export type Database = {
           active: boolean
           added_by: string | null
           api_key: string
+          calls_day: string | null
+          calls_today: number
+          calls_total: number
+          cooldown_until: string | null
           created_at: string
           id: string
           label: string | null
+          last_error: string | null
+          last_ok_at: string | null
+          owner_id: string | null
+          scope: string
         }
         Insert: {
           active?: boolean
           added_by?: string | null
           api_key: string
+          calls_day?: string | null
+          calls_today?: number
+          calls_total?: number
+          cooldown_until?: string | null
           created_at?: string
           id?: string
           label?: string | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          owner_id?: string | null
+          scope?: string
         }
         Update: {
           active?: boolean
           added_by?: string | null
           api_key?: string
+          calls_day?: string | null
+          calls_today?: number
+          calls_total?: number
+          cooldown_until?: string | null
           created_at?: string
           id?: string
           label?: string | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          owner_id?: string | null
+          scope?: string
         }
         Relationships: []
       }
@@ -505,6 +529,45 @@ export type Database = {
         }
         Relationships: []
       }
+      known_devices: {
+        Row: {
+          approved: boolean
+          city: string | null
+          created_at: string
+          fingerprint: string
+          id: string
+          ip: string | null
+          label: string | null
+          last_seen_at: string
+          revoked: boolean
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          city?: string | null
+          created_at?: string
+          fingerprint: string
+          id?: string
+          ip?: string | null
+          label?: string | null
+          last_seen_at?: string
+          revoked?: boolean
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          city?: string | null
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          ip?: string | null
+          label?: string | null
+          last_seen_at?: string
+          revoked?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       league_history: {
         Row: {
           created_at: string
@@ -558,6 +621,62 @@ export type Database = {
           word?: string
         }
         Relationships: []
+      }
+      login_bans: {
+        Row: {
+          created_at: string
+          ip: string
+          reason: string | null
+          until: string
+        }
+        Insert: {
+          created_at?: string
+          ip: string
+          reason?: string | null
+          until: string
+        }
+        Update: {
+          created_at?: string
+          ip?: string
+          reason?: string | null
+          until?: string
+        }
+        Relationships: []
+      }
+      login_requests: {
+        Row: {
+          account_id: string
+          created_at: string
+          device: string | null
+          expires_at: string
+          id: string
+          status: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          device?: string | null
+          expires_at?: string
+          id?: string
+          status?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          device?: string | null
+          expires_at?: string
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "app_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mistakes: {
         Row: {
@@ -629,6 +748,47 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parent_links: {
+        Row: {
+          account_id: string
+          active: boolean
+          created_at: string
+          id: string
+          linked_at: string | null
+          notify_freq: string
+          telegram_id: number | null
+          token: string
+        }
+        Insert: {
+          account_id: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          linked_at?: string | null
+          notify_freq?: string
+          telegram_id?: number | null
+          token: string
+        }
+        Update: {
+          account_id?: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          linked_at?: string | null
+          notify_freq?: string
+          telegram_id?: number | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_links_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "app_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1089,6 +1249,41 @@ export type Database = {
           update_id?: number
         }
         Relationships: []
+      }
+      tg_login_codes: {
+        Row: {
+          account_id: string
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          used_at: string | null
+        }
+        Insert: {
+          account_id: string
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          used_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tg_login_codes_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "app_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_purchases: {
         Row: {
