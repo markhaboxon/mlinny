@@ -529,6 +529,129 @@ export type Database = {
         }
         Relationships: []
       }
+      ielts_attempts: {
+        Row: {
+          band: number | null
+          created_at: string
+          detail: Json
+          id: string
+          mock_id: string | null
+          raw_score: number | null
+          skill: string
+          total: number | null
+          user_id: string
+          variant: string
+        }
+        Insert: {
+          band?: number | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          mock_id?: string | null
+          raw_score?: number | null
+          skill: string
+          total?: number | null
+          user_id: string
+          variant?: string
+        }
+        Update: {
+          band?: number | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          mock_id?: string | null
+          raw_score?: number | null
+          skill?: string
+          total?: number | null
+          user_id?: string
+          variant?: string
+        }
+        Relationships: []
+      }
+      ielts_materials: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          payload: Json
+          section: number
+          source: string
+          title: string
+          topic: string | null
+          uses: number
+          variant: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          payload: Json
+          section?: number
+          source?: string
+          title: string
+          topic?: string | null
+          uses?: number
+          variant?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          payload?: Json
+          section?: number
+          source?: string
+          title?: string
+          topic?: string | null
+          uses?: number
+          variant?: string
+        }
+        Relationships: []
+      }
+      ielts_sessions: {
+        Row: {
+          id: string
+          material_ids: string[]
+          mock_id: string | null
+          practice: boolean
+          prompt: Json | null
+          skill: string
+          started_at: string
+          submitted_at: string | null
+          user_id: string
+          variant: string
+        }
+        Insert: {
+          id?: string
+          material_ids?: string[]
+          mock_id?: string | null
+          practice?: boolean
+          prompt?: Json | null
+          skill: string
+          started_at?: string
+          submitted_at?: string | null
+          user_id: string
+          variant?: string
+        }
+        Update: {
+          id?: string
+          material_ids?: string[]
+          mock_id?: string | null
+          practice?: boolean
+          prompt?: Json | null
+          skill?: string
+          started_at?: string
+          submitted_at?: string | null
+          user_id?: string
+          variant?: string
+        }
+        Relationships: []
+      }
       known_devices: {
         Row: {
           approved: boolean
@@ -804,6 +927,8 @@ export type Database = {
           difficulty: string
           email: string | null
           gender: string | null
+          ielts_target_band: number | null
+          ielts_variant: string
           last_freeze_used: string | null
           last_streak_reward: number
           last_view: string | null
@@ -845,6 +970,8 @@ export type Database = {
           difficulty?: string
           email?: string | null
           gender?: string | null
+          ielts_target_band?: number | null
+          ielts_variant?: string
           last_freeze_used?: string | null
           last_streak_reward?: number
           last_view?: string | null
@@ -886,6 +1013,8 @@ export type Database = {
           difficulty?: string
           email?: string | null
           gender?: string | null
+          ielts_target_band?: number | null
+          ielts_variant?: string
           last_freeze_used?: string | null
           last_streak_reward?: number
           last_view?: string | null
