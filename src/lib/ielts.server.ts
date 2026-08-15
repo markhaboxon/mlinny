@@ -198,7 +198,7 @@ export async function getMaterial(
       variant,
       section,
       title: generated.title,
-      payload: payload as unknown as Record<string, unknown>,
+      payload: payload as never,
       source: "ai",
       uses: 1,
     })
