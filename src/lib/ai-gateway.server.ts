@@ -377,3 +377,12 @@ export async function keysReport(): Promise<{
     minuteWindowSec: Math.round(RATE_LIMIT_COOLDOWN_MS / 1000),
   };
 }
+
+/**
+ * Kalit rotatsiyasi bilan ishlaydigan xom `fetch` — Gemini'ning
+ * OpenAI-mos endpointiga to'g'ridan-to'g'ri so'rov yuborish kerak bo'lganda
+ * (masalan IELTS Speaking audio tahlili) ishlatiladi.
+ */
+export function gatewayFetch(userId?: string): typeof fetch {
+  return createRotatingFetch(userId);
+}
