@@ -43,8 +43,8 @@ async function profileOf(userId: string) {
   const db = await admin();
   const { data } = await db
     .from("profiles")
-    .select("id, ielts_variant, ielts_target_band")
-    .eq("id", userId)
+    .select("user_id, ielts_variant, ielts_target_band")
+    .eq("user_id", userId)
     .maybeSingle();
   const variant = ((data as { ielts_variant?: string } | null)?.ielts_variant ??
     "academic") as IeltsVariant;
@@ -113,7 +113,7 @@ export async function saveSettings(
   const patch: Record<string, unknown> = {};
   if (data.variant) patch["ielts_variant"] = data.variant;
   if (data.targetBand !== undefined) patch["ielts_target_band"] = data.targetBand;
-  if (Object.keys(patch).length) await db.from("profiles").update(patch as never).eq("id", userId);
+  if (Object.keys(patch).length) await db.from("profiles").update(patch as never).eq("user_id", userId);
   return { ok: true };
 }
 
