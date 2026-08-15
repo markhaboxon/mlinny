@@ -59,6 +59,9 @@ export default function GameBar() {
           ⚔️ Duel
         </Link>
       </div>
+      <Link to="/ielts" className="btn-ghost text-sm text-center mt-2 block">
+        🎓 IELTS bo'limi
+      </Link>
       <Link to="/write" className="btn-ghost text-sm text-center mt-2 block">
         ✍️ Insho / nutqni AI tekshiradi
       </Link>
