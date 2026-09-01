@@ -23,6 +23,7 @@ import { Route as AdminSetupRouteImport } from './routes/admin/setup'
 import { Route as EnterTokenRouteImport } from './routes/enter.$token'
 import { Route as IeltsListeningRouteImport } from './routes/ielts_.listening'
 import { Route as IeltsReadingRouteImport } from './routes/ielts_.reading'
+import { Route as IeltsWritingRouteImport } from './routes/ielts_.writing'
 import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
 import { Route as TeacherGroupIdRouteImport } from './routes/teacher/$groupId'
 import { Route as TeacherStudentStudentIdRouteImport } from './routes/teacher/student.$studentId'
@@ -99,6 +100,11 @@ const IeltsReadingRoute = IeltsReadingRouteImport.update({
   path: '/ielts/reading',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IeltsWritingRoute = IeltsWritingRouteImport.update({
+  id: '/ielts_/writing',
+  path: '/ielts/writing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherIndexRoute = TeacherIndexRouteImport.update({
   id: '/teacher/',
   path: '/teacher/',
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/enter/$token': typeof EnterTokenRoute
   '/ielts/listening': typeof IeltsListeningRoute
   '/ielts/reading': typeof IeltsReadingRoute
+  '/ielts/writing': typeof IeltsWritingRoute
   '/teacher/$groupId': typeof TeacherGroupIdRoute
   '/admin/': typeof AdminIndexRoute
   '/teacher/': typeof TeacherIndexRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/enter/$token': typeof EnterTokenRoute
   '/ielts/listening': typeof IeltsListeningRoute
   '/ielts/reading': typeof IeltsReadingRoute
+  '/ielts/writing': typeof IeltsWritingRoute
   '/teacher/$groupId': typeof TeacherGroupIdRoute
   '/admin': typeof AdminIndexRoute
   '/teacher': typeof TeacherIndexRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/enter/$token': typeof EnterTokenRoute
   '/ielts_/listening': typeof IeltsListeningRoute
   '/ielts_/reading': typeof IeltsReadingRoute
+  '/ielts_/writing': typeof IeltsWritingRoute
   '/teacher/$groupId': typeof TeacherGroupIdRoute
   '/admin/': typeof AdminIndexRoute
   '/teacher/': typeof TeacherIndexRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/enter/$token'
     | '/ielts/listening'
     | '/ielts/reading'
+    | '/ielts/writing'
     | '/teacher/$groupId'
     | '/admin/'
     | '/teacher/'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/enter/$token'
     | '/ielts/listening'
     | '/ielts/reading'
+    | '/ielts/writing'
     | '/teacher/$groupId'
     | '/admin'
     | '/teacher'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/enter/$token'
     | '/ielts_/listening'
     | '/ielts_/reading'
+    | '/ielts_/writing'
     | '/teacher/$groupId'
     | '/admin/'
     | '/teacher/'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   EnterTokenRoute: typeof EnterTokenRoute
   IeltsListeningRoute: typeof IeltsListeningRoute
   IeltsReadingRoute: typeof IeltsReadingRoute
+  IeltsWritingRoute: typeof IeltsWritingRoute
   TeacherGroupIdRoute: typeof TeacherGroupIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
@@ -378,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IeltsReadingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ielts_/writing': {
+      id: '/ielts_/writing'
+      path: '/ielts/writing'
+      fullPath: '/ielts/writing'
+      preLoaderRoute: typeof IeltsWritingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher/': {
       id: '/teacher/'
       path: '/teacher'
@@ -430,6 +450,7 @@ const rootRouteChildren: RootRouteChildren = {
   EnterTokenRoute: EnterTokenRoute,
   IeltsListeningRoute: IeltsListeningRoute,
   IeltsReadingRoute: IeltsReadingRoute,
+  IeltsWritingRoute: IeltsWritingRoute,
   TeacherGroupIdRoute: TeacherGroupIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,
