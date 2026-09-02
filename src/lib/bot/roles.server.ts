@@ -13,6 +13,10 @@ export const STUDENT_COMMANDS = [
   { command: "sentence", description: "Gap tuzish mashqi" },
   { command: "story", description: "Mini-hikoya" },
   { command: "weak", description: "Zaif joylar tahlili" },
+  { command: "ielts", description: "IELTS natijalarim va mashq" },
+  { command: "league", description: "Haftalik liga reytingi" },
+  { command: "shop", description: "Tangalar va do'kon" },
+  { command: "duel", description: "Do'st bilan duel" },
   { command: "ask", description: "AI'dan savol so'rash" },
   { command: "settings", description: "Sozlamalar" },
   { command: "profile", description: "Mening hisobim" },
@@ -58,6 +62,10 @@ const STUDENT_ONLY = new Set([
   "/sentence",
   "/story",
   "/weak",
+  "/ielts",
+  "/league",
+  "/shop",
+  "/duel",
   "/settings",
 ]);
 const TEACHER_ONLY = new Set([
