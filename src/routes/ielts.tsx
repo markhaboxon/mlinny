@@ -84,15 +84,28 @@ function IeltsHome() {
       </section>
 
       <section className="grid grid-cols-2 gap-3 mt-4">
-        {(["listening", "reading", "writing", "speaking"] as const).map((s) => (
-          <div key={s} className="card-surface p-4">
-            <div className="font-semibold">{SKILL_LABEL[s]}</div>
+        {([
+          ["listening", "/ielts/listening", "🎧"],
+          ["reading", "/ielts/reading", "📖"],
+          ["writing", "/ielts/writing", "✍️"],
+          ["speaking", "/ielts/speaking", "🎤"],
+        ] as const).map(([s, to, icon]) => (
+          <Link key={s} to={to} search={{ mock: undefined }} className="card-surface p-4 block hover:opacity-90">
+            <div className="font-semibold">
+              {icon} {SKILL_LABEL[s]}
+            </div>
             <div className="text-sm text-muted-foreground mt-1">
               Eng yaxshi band: {data?.best?.[s] ?? "—"}
             </div>
-          </div>
+            <div className="text-xs text-primary mt-2">Mashqni boshlash →</div>
+          </Link>
         ))}
       </section>
+
+      <Link to="/ielts/mock" className="btn-primary w-full mt-4 block text-center">
+        🏁 To'liq mock test
+      </Link>
+
 
       <section className="card-surface p-4 mt-4">
         <h2 className="font-semibold">Natijalar tarixi</h2>
