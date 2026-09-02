@@ -90,7 +90,7 @@ function IeltsHome() {
           ["writing", "/ielts/writing", "✍️"],
           ["speaking", "/ielts/speaking", "🎤"],
         ] as const).map(([s, to, icon]) => (
-          <Link key={s} to={to} className="card-surface p-4 block hover:opacity-90">
+          <Link key={s} to={to} search={{ mock: undefined }} className="card-surface p-4 block hover:opacity-90">
             <div className="font-semibold">
               {icon} {SKILL_LABEL[s]}
             </div>
