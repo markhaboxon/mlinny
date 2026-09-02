@@ -459,6 +459,10 @@ function helpText(u: BotUser) {
 /sentence — "shu so'z bilan gap tuzing" mashqi
 /story — bugungi so'zlardan mini-hikoya
 /weak — zaif joylar tahlili
+/ielts — IELTS natijalarim va mashqlar
+/league — haftalik liga reytingi
+/shop — tangalar va do'kon
+/duel — 1:1 bellashuv
 /ask — AI'dan istalgan savol
 /settings — kunlik yuborish vaqti va eslatmalar
 /menu — asosiy menyu`;
