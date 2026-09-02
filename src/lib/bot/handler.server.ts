@@ -306,6 +306,14 @@ function mainMenu(u: BotUser): Button[][] {
       { text: "📖 Hikoya", callback_data: "story" },
       { text: "⚙️ Sozlamalar", callback_data: "settings" },
     ],
+    [
+      { text: "🎓 IELTS", callback_data: "ielts" },
+      { text: "🏆 Liga", callback_data: "league" },
+    ],
+    [
+      { text: "🛒 Do'kon", callback_data: "shop" },
+      { text: "⚔️ Duel", callback_data: "duel" },
+    ],
     [{ text: "🌐 Saytga o'tish", url: SITE_URL }],
   ];
 }
@@ -348,6 +356,14 @@ async function handleCommand(u: BotUser, text: string) {
       return story(u);
     case "/weak":
       return weakSpots(u);
+    case "/ielts":
+      return ieltsCard(u);
+    case "/league":
+      return leagueCard(u);
+    case "/shop":
+      return shopCard(u);
+    case "/duel":
+      return duelCard(u);
     case "/sentence":
       return sentenceTask(u);
     case "/ask":
@@ -1044,6 +1060,10 @@ async function handleCallback(cb: TgCallback) {
   if (data === "settings") return settings(u);
   if (data === "story") return story(u);
   if (data === "weak") return weakSpots(u);
+  if (data === "ielts") return ieltsCard(u);
+  if (data === "league") return leagueCard(u);
+  if (data === "shop") return shopCard(u);
+  if (data === "duel") return duelCard(u);
   if (data === "sentence") return sentenceTask(u);
   if (data === "students") return teacherOnly(u, () => students(u));
   if (data === "report") return teacherOnly(u, () => report(u));
@@ -1174,4 +1194,117 @@ async function alertTeacherLowScore(u: BotUser, pct: number) {
       chat,
       `⚠️ <b>Past natija</b>\n${esc(u.name ?? "O'quvchi")} ("${esc(g.name)}") testda ${pct}% oldi. Yordam kerak bo'lishi mumkin.`,
     );
+}
+
+
+// ---------------------------------------------------------------------------
+// IELTS / o'yin bo'limlari (o'quvchi)
+// ---------------------------------------------------------------------------
+async function ieltsCard(u: BotUser) {
+  const { data: prof } = await supabaseAdmin
+    .from("profiles")
+    .select("ielts_variant, ielts_target_band")
+    .eq("user_id", u.userId)
+    .maybeSingle();
+  const { data: attempts } = await supabaseAdmin
+    .from("ielts_attempts")
+    .select("skill, band, created_at")
+    .eq("user_id", u.userId)
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  const best: Record<string, number> = {};
+  for (const a of attempts ?? []) {
+    const b = a.band === null ? null : Number(a.band);
+    const skill = a.skill as string;
+    if (b === null || Number.isNaN(b)) continue;
+    if (!best[skill] || b > (best[skill] as number)) best[skill] = b;
+  }
+  const line = (k: string, label: string) => `${label}: <b>${best[k] ?? "—"}</b>`;
+
+  await sendMessage(
+    u.chatId,
+    `🎓 <b>IELTS</b>\n` +
+      `Imtihon turi: ${prof?.ielts_variant === "general" ? "General Training" : "Academic"}\n` +
+      (prof?.ielts_target_band ? `Maqsad band: <b>${prof.ielts_target_band}</b>\n` : "") +
+      `\n${line("listening", "🎧 Listening")}\n${line("reading", "📖 Reading")}\n` +
+      `${line("writing", "✍️ Writing")}\n${line("speaking", "🎤 Speaking")}\n` +
+      `${line("mock", "🏁 Mock overall")}\n\n` +
+      `Mashqlar to'liq saytda ishlaydi (audio, yozma ish, ovoz yozish).`,
+    {
+      buttons: [
+        [
+          { text: "🎧 Listening", url: `${SITE_URL}/ielts/listening` },
+          { text: "📖 Reading", url: `${SITE_URL}/ielts/reading` },
+        ],
+        [
+          { text: "✍️ Writing", url: `${SITE_URL}/ielts/writing` },
+          { text: "🎤 Speaking", url: `${SITE_URL}/ielts/speaking` },
+        ],
+        [{ text: "🏁 To'liq mock test", url: `${SITE_URL}/ielts/mock` }],
+      ],
+    },
+  );
+}
+
+async function leagueCard(u: BotUser) {
+  const { data: me } = await supabaseAdmin
+    .from("profiles")
+    .select("league, weekly_xp, total_xp")
+    .eq("user_id", u.userId)
+    .maybeSingle();
+  const league = (me?.league as string) ?? "bronze";
+  const { data: rows } = await supabaseAdmin
+    .from("profiles")
+    .select("user_id, name, weekly_xp")
+    .eq("league", league)
+    .order("weekly_xp", { ascending: false })
+    .limit(10);
+
+  const list = (rows ?? [])
+    .map((r, i) => {
+      const mark = r.user_id === u.userId ? "👉 " : "";
+      const medal = ["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`;
+      return `${mark}${medal} ${esc((r.name as string) ?? "O'quvchi")} — ${r.weekly_xp ?? 0} XP`;
+    })
+    .join("\n");
+
+  await sendMessage(
+    u.chatId,
+    `🏆 <b>${league.toUpperCase()} ligasi</b>\n\n${list || "Hali natija yo'q."}\n\n` +
+      `Sizning haftalik XP: <b>${me?.weekly_xp ?? 0}</b> • Jami: ${me?.total_xp ?? 0}`,
+    { buttons: [[{ text: "🌐 Liga sahifasi", url: `${SITE_URL}/league` }]] },
+  );
+}
+
+async function shopCard(u: BotUser) {
+  const { data: me } = await supabaseAdmin
+    .from("profiles")
+    .select("coins, streak_freezes")
+    .eq("user_id", u.userId)
+    .maybeSingle();
+  const { data: items } = await supabaseAdmin
+    .from("shop_items")
+    .select("title, emoji, price")
+    .eq("active", true)
+    .order("sort", { ascending: true })
+    .limit(12);
+
+  const list = (items ?? [])
+    .map((i) => `${i.emoji ?? "•"} ${esc(i.title as string)} — ${i.price} 🪙`)
+    .join("\n");
+
+  await sendMessage(
+    u.chatId,
+    `🛒 <b>Do'kon</b>\n\nTangalaringiz: <b>${me?.coins ?? 0}</b> 🪙 • Muzlatgich: ${me?.streak_freezes ?? 0} 🧊\n\n${list}\n\nXarid saytdagi do'kon sahifasida amalga oshiriladi.`,
+    { buttons: [[{ text: "🛒 Do'konni ochish", url: `${SITE_URL}/shop` }]] },
+  );
+}
+
+async function duelCard(u: BotUser) {
+  await sendMessage(
+    u.chatId,
+    `⚔️ <b>Duel</b>\n\nBoshqa o'quvchi bilan 1:1 tezkor bellashuv. Raqib topilmasa, AI bot bilan o'ynaysiz.\nG'alaba uchun XP va tangalar beriladi.`,
+    { buttons: [[{ text: "⚔️ Duelni boshlash", url: `${SITE_URL}/duel` }]] },
+  );
 }
