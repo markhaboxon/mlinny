@@ -22,6 +22,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSetupRouteImport } from './routes/admin/setup'
 import { Route as EnterTokenRouteImport } from './routes/enter.$token'
 import { Route as IeltsListeningRouteImport } from './routes/ielts_.listening'
+import { Route as IeltsMockRouteImport } from './routes/ielts_.mock'
 import { Route as IeltsReadingRouteImport } from './routes/ielts_.reading'
 import { Route as IeltsSpeakingRouteImport } from './routes/ielts_.speaking'
 import { Route as IeltsWritingRouteImport } from './routes/ielts_.writing'
@@ -96,6 +97,11 @@ const IeltsListeningRoute = IeltsListeningRouteImport.update({
   path: '/ielts/listening',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IeltsMockRoute = IeltsMockRouteImport.update({
+  id: '/ielts_/mock',
+  path: '/ielts/mock',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IeltsReadingRoute = IeltsReadingRouteImport.update({
   id: '/ielts_/reading',
   path: '/ielts/reading',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
   '/ielts/listening': typeof IeltsListeningRoute
+  '/ielts/mock': typeof IeltsMockRoute
   '/ielts/reading': typeof IeltsReadingRoute
   '/ielts/speaking': typeof IeltsSpeakingRoute
   '/ielts/writing': typeof IeltsWritingRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
   '/ielts/listening': typeof IeltsListeningRoute
+  '/ielts/mock': typeof IeltsMockRoute
   '/ielts/reading': typeof IeltsReadingRoute
   '/ielts/speaking': typeof IeltsSpeakingRoute
   '/ielts/writing': typeof IeltsWritingRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
   '/ielts_/listening': typeof IeltsListeningRoute
+  '/ielts_/mock': typeof IeltsMockRoute
   '/ielts_/reading': typeof IeltsReadingRoute
   '/ielts_/speaking': typeof IeltsSpeakingRoute
   '/ielts_/writing': typeof IeltsWritingRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/enter/$token'
     | '/ielts/listening'
+    | '/ielts/mock'
     | '/ielts/reading'
     | '/ielts/speaking'
     | '/ielts/writing'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/enter/$token'
     | '/ielts/listening'
+    | '/ielts/mock'
     | '/ielts/reading'
     | '/ielts/speaking'
     | '/ielts/writing'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/enter/$token'
     | '/ielts_/listening'
+    | '/ielts_/mock'
     | '/ielts_/reading'
     | '/ielts_/speaking'
     | '/ielts_/writing'
@@ -293,6 +305,7 @@ export interface RootRouteChildren {
   AdminSetupRoute: typeof AdminSetupRoute
   EnterTokenRoute: typeof EnterTokenRoute
   IeltsListeningRoute: typeof IeltsListeningRoute
+  IeltsMockRoute: typeof IeltsMockRoute
   IeltsReadingRoute: typeof IeltsReadingRoute
   IeltsSpeakingRoute: typeof IeltsSpeakingRoute
   IeltsWritingRoute: typeof IeltsWritingRoute
@@ -397,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IeltsListeningRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ielts_/mock': {
+      id: '/ielts_/mock'
+      path: '/ielts/mock'
+      fullPath: '/ielts/mock'
+      preLoaderRoute: typeof IeltsMockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ielts_/reading': {
       id: '/ielts_/reading'
       path: '/ielts/reading'
@@ -469,6 +489,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSetupRoute: AdminSetupRoute,
   EnterTokenRoute: EnterTokenRoute,
   IeltsListeningRoute: IeltsListeningRoute,
+  IeltsMockRoute: IeltsMockRoute,
   IeltsReadingRoute: IeltsReadingRoute,
   IeltsSpeakingRoute: IeltsSpeakingRoute,
   IeltsWritingRoute: IeltsWritingRoute,
