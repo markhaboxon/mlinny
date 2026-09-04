@@ -15,6 +15,7 @@ import { Route as DuelRouteImport } from './routes/duel'
 import { Route as GroupRouteImport } from './routes/group'
 import { Route as IeltsRouteImport } from './routes/ielts'
 import { Route as LeagueRouteImport } from './routes/league'
+import { Route as PronounceRouteImport } from './routes/pronounce'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as StoryRouteImport } from './routes/story'
@@ -61,6 +62,11 @@ const IeltsRoute = IeltsRouteImport.update({
 const LeagueRoute = LeagueRouteImport.update({
   id: '/league',
   path: '/league',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PronounceRoute = PronounceRouteImport.update({
+  id: '/pronounce',
+  path: '/pronounce',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewRoute = ReviewRouteImport.update({
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
+  '/pronounce': typeof PronounceRoute
   '/review': typeof ReviewRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
+  '/pronounce': typeof PronounceRoute
   '/review': typeof ReviewRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
+  '/pronounce': typeof PronounceRoute
   '/review': typeof ReviewRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/group'
     | '/ielts'
     | '/league'
+    | '/pronounce'
     | '/review'
     | '/shop'
     | '/story'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/group'
     | '/ielts'
     | '/league'
+    | '/pronounce'
     | '/review'
     | '/shop'
     | '/story'
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/group'
     | '/ielts'
     | '/league'
+    | '/pronounce'
     | '/review'
     | '/shop'
     | '/story'
@@ -311,6 +323,7 @@ export interface RootRouteChildren {
   GroupRoute: typeof GroupRoute
   IeltsRoute: typeof IeltsRoute
   LeagueRoute: typeof LeagueRoute
+  PronounceRoute: typeof PronounceRoute
   ReviewRoute: typeof ReviewRoute
   ShopRoute: typeof ShopRoute
   StoryRoute: typeof StoryRoute
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       path: '/league'
       fullPath: '/league'
       preLoaderRoute: typeof LeagueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pronounce': {
+      id: '/pronounce'
+      path: '/pronounce'
+      fullPath: '/pronounce'
+      preLoaderRoute: typeof PronounceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review': {
@@ -503,6 +523,7 @@ const rootRouteChildren: RootRouteChildren = {
   GroupRoute: GroupRoute,
   IeltsRoute: IeltsRoute,
   LeagueRoute: LeagueRoute,
+  PronounceRoute: PronounceRoute,
   ReviewRoute: ReviewRoute,
   ShopRoute: ShopRoute,
   StoryRoute: StoryRoute,
