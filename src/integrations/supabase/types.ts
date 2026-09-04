@@ -1048,6 +1048,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pronunciation_attempts: {
+        Row: {
+          created_at: string
+          feedback: Json
+          heard: string | null
+          id: string
+          score: number
+          target: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback?: Json
+          heard?: string | null
+          id?: string
+          score?: number
+          target: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: Json
+          heard?: string | null
+          id?: string
+          score?: number
+          target?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_messages: {
         Row: {
           body: string
@@ -1119,6 +1149,51 @@ export type Database = {
           price?: number
           sort?: number
           title?: string
+        }
+        Relationships: []
+      }
+      srs_cards: {
+        Row: {
+          created_at: string
+          due_date: string
+          ease: number
+          example: string | null
+          id: string
+          interval_days: number
+          lapses: number
+          last_reviewed_at: string | null
+          reps: number
+          translation: string | null
+          user_id: string
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string
+          ease?: number
+          example?: string | null
+          id?: string
+          interval_days?: number
+          lapses?: number
+          last_reviewed_at?: string | null
+          reps?: number
+          translation?: string | null
+          user_id: string
+          word: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string
+          ease?: number
+          example?: string | null
+          id?: string
+          interval_days?: number
+          lapses?: number
+          last_reviewed_at?: string | null
+          reps?: number
+          translation?: string | null
+          user_id?: string
+          word?: string
         }
         Relationships: []
       }
@@ -1636,6 +1711,15 @@ export type Database = {
         }[]
       }
       run_league_rollover: { Args: never; Returns: undefined }
+      srs_review: {
+        Args: { _card: string; _quality: number }
+        Returns: {
+          due_date: string
+          ease: number
+          id: string
+          interval_days: number
+        }[]
+      }
       teacher_group_activity: {
         Args: { _days?: number; _gid: string }
         Returns: {
