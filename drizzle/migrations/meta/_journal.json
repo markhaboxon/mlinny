@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788528670207,
+      "tag": "0000_srs_cards_and_pronunciation",
+      "breakpoints": true
+    }
+  ]
+}
