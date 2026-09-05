@@ -83,7 +83,11 @@ export default function ApiKeysSection({ enabled = true }: { enabled?: boolean }
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <p className="mt-3 text-sm text-red-600/80">
+          Bu bo'limni faqat admin ko'ra oladi.
+        </p>
+      ) : isLoading ? (
         <p className="mt-3 text-sm text-muted-foreground">Yuklanmoqda...</p>
       ) : rows.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">Hali bazada API kalit yo'q.</p>
