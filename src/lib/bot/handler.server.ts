@@ -314,6 +314,10 @@ function mainMenu(u: BotUser): Button[][] {
       { text: "🛒 Do'kon", callback_data: "shop" },
       { text: "⚔️ Duel", callback_data: "duel" },
     ],
+    [
+      { text: "🃏 Takrorlash", callback_data: "review" },
+      { text: "🎙️ Talaffuz", callback_data: "pronounce" },
+    ],
     [{ text: "🌐 Saytga o'tish", url: SITE_URL }],
   ];
 }

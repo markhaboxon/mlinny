@@ -68,6 +68,8 @@ const STUDENT_ONLY = new Set([
   "/league",
   "/shop",
   "/duel",
+  "/review",
+  "/pronounce",
   "/settings",
 ]);
 const TEACHER_ONLY = new Set([
