@@ -447,7 +447,7 @@ function AdminPage() {
         </div>
       </section>
 
-      <ApiKeysSection />
+      <ApiKeysSection enabled={isAdmin} />
 
 
 

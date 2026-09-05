@@ -17,15 +17,18 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 /** Admin: umumiy bazadagi barcha API kalitlar bo'yicha to'liq hisobot. */
-export default function ApiKeysSection() {
+export default function ApiKeysSection({ enabled = true }: { enabled?: boolean }) {
   const qc = useQueryClient();
   const reportFn = useServerFn(adminKeysReport);
   const toggleFn = useServerFn(adminToggleKey);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["admin-keys"],
     queryFn: () => reportFn(),
-    refetchInterval: 20000,
+    enabled,
+    retry: false,
+    throwOnError: false,
+    refetchInterval: enabled ? 20000 : false,
   });
 
   const mut = useMutation({
@@ -80,7 +83,11 @@ export default function ApiKeysSection() {
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <p className="mt-3 text-sm text-red-600/80">
+          Bu bo'limni faqat admin ko'ra oladi.
+        </p>
+      ) : isLoading ? (
         <p className="mt-3 text-sm text-muted-foreground">Yuklanmoqda...</p>
       ) : rows.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">Hali bazada API kalit yo'q.</p>
