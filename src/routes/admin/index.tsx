@@ -81,24 +81,30 @@ function AdminPage() {
     queryFn: () => access(),
     enabled: !!user,
   });
-  const isAdmin = me?.kind === "admin";
+  const isAdmin = me?.kind === "admin" && me?.active !== false;
 
   const { data: accounts = [] } = useQuery({
     queryKey: ["admin-accounts"],
     queryFn: () => accountsFn(),
     enabled: isAdmin,
+    retry: false,
+    throwOnError: false,
     refetchInterval: 30000,
   });
   const { data: activity = [] } = useQuery({
     queryKey: ["admin-activity"],
     queryFn: () => activityFn({ data: { limit: 120 } }),
     enabled: isAdmin,
+    retry: false,
+    throwOnError: false,
     refetchInterval: 30000,
   });
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: () => statsFn(),
     enabled: isAdmin,
+    retry: false,
+    throwOnError: false,
     refetchInterval: 30000,
   });
 
