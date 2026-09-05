@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DictationRouteImport } from './routes/dictation'
 import { Route as DuelRouteImport } from './routes/duel'
+import { Route as GrammarRouteImport } from './routes/grammar'
 import { Route as GroupRouteImport } from './routes/group'
 import { Route as IeltsRouteImport } from './routes/ielts'
 import { Route as LeagueRouteImport } from './routes/league'
@@ -53,6 +54,11 @@ const DictationRoute = DictationRouteImport.update({
 const DuelRoute = DuelRouteImport.update({
   id: '/duel',
   path: '/duel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GrammarRoute = GrammarRouteImport.update({
+  id: '/grammar',
+  path: '/grammar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupRoute = GroupRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dictation': typeof DictationRoute
   '/duel': typeof DuelRoute
+  '/grammar': typeof GrammarRoute
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dictation': typeof DictationRoute
   '/duel': typeof DuelRoute
+  '/grammar': typeof GrammarRoute
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dictation': typeof DictationRoute
   '/duel': typeof DuelRoute
+  '/grammar': typeof GrammarRoute
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
   '/league': typeof LeagueRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dictation'
     | '/duel'
+    | '/grammar'
     | '/group'
     | '/ielts'
     | '/league'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dictation'
     | '/duel'
+    | '/grammar'
     | '/group'
     | '/ielts'
     | '/league'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dictation'
     | '/duel'
+    | '/grammar'
     | '/group'
     | '/ielts'
     | '/league'
@@ -333,6 +345,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DictationRoute: typeof DictationRoute
   DuelRoute: typeof DuelRoute
+  GrammarRoute: typeof GrammarRoute
   GroupRoute: typeof GroupRoute
   IeltsRoute: typeof IeltsRoute
   LeagueRoute: typeof LeagueRoute
@@ -384,6 +397,13 @@ declare module '@tanstack/react-router' {
       path: '/duel'
       fullPath: '/duel'
       preLoaderRoute: typeof DuelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grammar': {
+      id: '/grammar'
+      path: '/grammar'
+      fullPath: '/grammar'
+      preLoaderRoute: typeof GrammarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/group': {
@@ -541,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DictationRoute: DictationRoute,
   DuelRoute: DuelRoute,
+  GrammarRoute: GrammarRoute,
   GroupRoute: GroupRoute,
   IeltsRoute: IeltsRoute,
   LeagueRoute: LeagueRoute,
