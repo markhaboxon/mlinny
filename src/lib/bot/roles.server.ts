@@ -17,6 +17,8 @@ export const STUDENT_COMMANDS = [
   { command: "league", description: "Haftalik liga reytingi" },
   { command: "shop", description: "Tangalar va do'kon" },
   { command: "duel", description: "Do'st bilan duel" },
+  { command: "review", description: "Aqlli takrorlash (SRS)" },
+  { command: "pronounce", description: "Talaffuz mashqi" },
   { command: "ask", description: "AI'dan savol so'rash" },
   { command: "settings", description: "Sozlamalar" },
   { command: "profile", description: "Mening hisobim" },
@@ -66,6 +68,8 @@ const STUDENT_ONLY = new Set([
   "/league",
   "/shop",
   "/duel",
+  "/review",
+  "/pronounce",
   "/settings",
 ]);
 const TEACHER_ONLY = new Set([

@@ -314,6 +314,10 @@ function mainMenu(u: BotUser): Button[][] {
       { text: "🛒 Do'kon", callback_data: "shop" },
       { text: "⚔️ Duel", callback_data: "duel" },
     ],
+    [
+      { text: "🃏 Takrorlash", callback_data: "review" },
+      { text: "🎙️ Talaffuz", callback_data: "pronounce" },
+    ],
     [{ text: "🌐 Saytga o'tish", url: SITE_URL }],
   ];
 }
@@ -364,6 +368,10 @@ async function handleCommand(u: BotUser, text: string) {
       return shopCard(u);
     case "/duel":
       return duelCard(u);
+    case "/review":
+      return reviewCard(u);
+    case "/pronounce":
+      return pronounceCard(u);
     case "/sentence":
       return sentenceTask(u);
     case "/ask":
@@ -463,6 +471,8 @@ function helpText(u: BotUser) {
 /league — haftalik liga reytingi
 /shop — tangalar va do'kon
 /duel — 1:1 bellashuv
+/review — aqlli takrorlash (SRS) kartalari
+/pronounce — talaffuz mashqi
 /ask — AI'dan istalgan savol
 /settings — kunlik yuborish vaqti va eslatmalar
 /menu — asosiy menyu`;
@@ -1068,6 +1078,8 @@ async function handleCallback(cb: TgCallback) {
   if (data === "league") return leagueCard(u);
   if (data === "shop") return shopCard(u);
   if (data === "duel") return duelCard(u);
+  if (data === "review") return reviewCard(u);
+  if (data === "pronounce") return pronounceCard(u);
   if (data === "sentence") return sentenceTask(u);
   if (data === "students") return teacherOnly(u, () => students(u));
   if (data === "report") return teacherOnly(u, () => report(u));
@@ -1310,5 +1322,42 @@ async function duelCard(u: BotUser) {
     u.chatId,
     `⚔️ <b>Duel</b>\n\nBoshqa o'quvchi bilan 1:1 tezkor bellashuv. Raqib topilmasa, AI bot bilan o'ynaysiz.\nG'alaba uchun XP va tangalar beriladi.`,
     { buttons: [[{ text: "⚔️ Duelni boshlash", url: `${SITE_URL}/duel` }]] },
+  );
+}
+
+async function reviewCard(u: BotUser) {
+  const { count: due } = await supabaseAdmin
+    .from("srs_cards")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", u.userId)
+    .lte("due_date", today());
+  const { count: total } = await supabaseAdmin
+    .from("srs_cards")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", u.userId);
+  await sendMessage(
+    u.chatId,
+    `🃏 <b>Aqlli takrorlash</b>\n\nJami kartalar: <b>${total ?? 0}</b>\nBugun takrorlash kerak: <b>${due ?? 0}</b>\n\nXotira ilmiy interval bilan (SM-2) so'zlarni mustahkamlaydi — har kuni 5 daqiqa kifoya!`,
+    { buttons: [[{ text: "🃏 Takrorlashni boshlash", url: `${SITE_URL}/review` }]] },
+  );
+}
+
+async function pronounceCard(u: BotUser) {
+  const { data: last } = await supabaseAdmin
+    .from("pronunciation_attempts")
+    .select("score")
+    .eq("user_id", u.userId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+  const scores = (last ?? []).map((r) => r.score as number);
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  await sendMessage(
+    u.chatId,
+    `🎙️ <b>Talaffuz murabbiyi</b>\n\n${
+      avg !== null
+        ? `So'nggi ${scores.length} urinishdagi o'rtacha baho: <b>${avg}/100</b>`
+        : "Hali urinishlar yo'q — birinchi mashqingizni boshlang!"
+    }\n\nJumlani eshiting, mikrofon orqali ayting — AI har bir tovushni tahlil qilib, aniq maslahat beradi.`,
+    { buttons: [[{ text: "🎙️ Mashqni boshlash", url: `${SITE_URL}/pronounce` }]] },
   );
 }

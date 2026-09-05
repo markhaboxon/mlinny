@@ -58,6 +58,12 @@ export default function GameBar() {
         <Link to="/duel" className="btn-ghost text-sm text-center">
           ⚔️ Duel
         </Link>
+        <Link to="/review" className="btn-ghost text-sm text-center">
+          🃏 Takrorlash
+        </Link>
+        <Link to="/pronounce" className="btn-ghost text-sm text-center">
+          🎙️ Talaffuz
+        </Link>
       </div>
       <Link to="/ielts" className="btn-ghost text-sm text-center mt-2 block">
         🎓 IELTS bo'limi
