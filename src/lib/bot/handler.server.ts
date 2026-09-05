@@ -368,6 +368,10 @@ async function handleCommand(u: BotUser, text: string) {
       return shopCard(u);
     case "/duel":
       return duelCard(u);
+    case "/review":
+      return reviewCard(u);
+    case "/pronounce":
+      return pronounceCard(u);
     case "/sentence":
       return sentenceTask(u);
     case "/ask":
@@ -467,6 +471,8 @@ function helpText(u: BotUser) {
 /league — haftalik liga reytingi
 /shop — tangalar va do'kon
 /duel — 1:1 bellashuv
+/review — aqlli takrorlash (SRS) kartalari
+/pronounce — talaffuz mashqi
 /ask — AI'dan istalgan savol
 /settings — kunlik yuborish vaqti va eslatmalar
 /menu — asosiy menyu`;
