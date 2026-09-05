@@ -1324,3 +1324,40 @@ async function duelCard(u: BotUser) {
     { buttons: [[{ text: "⚔️ Duelni boshlash", url: `${SITE_URL}/duel` }]] },
   );
 }
+
+async function reviewCard(u: BotUser) {
+  const { count: due } = await supabaseAdmin
+    .from("srs_cards")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", u.userId)
+    .lte("due_date", today());
+  const { count: total } = await supabaseAdmin
+    .from("srs_cards")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", u.userId);
+  await sendMessage(
+    u.chatId,
+    `🃏 <b>Aqlli takrorlash</b>\n\nJami kartalar: <b>${total ?? 0}</b>\nBugun takrorlash kerak: <b>${due ?? 0}</b>\n\nXotira ilmiy interval bilan (SM-2) so'zlarni mustahkamlaydi — har kuni 5 daqiqa kifoya!`,
+    { buttons: [[{ text: "🃏 Takrorlashni boshlash", url: `${SITE_URL}/review` }]] },
+  );
+}
+
+async function pronounceCard(u: BotUser) {
+  const { data: last } = await supabaseAdmin
+    .from("pronunciation_attempts")
+    .select("score")
+    .eq("user_id", u.userId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+  const scores = (last ?? []).map((r) => r.score as number);
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  await sendMessage(
+    u.chatId,
+    `🎙️ <b>Talaffuz murabbiyi</b>\n\n${
+      avg !== null
+        ? `So'nggi ${scores.length} urinishdagi o'rtacha baho: <b>${avg}/100</b>`
+        : "Hali urinishlar yo'q — birinchi mashqingizni boshlang!"
+    }\n\nJumlani eshiting, mikrofon orqali ayting — AI har bir tovushni tahlil qilib, aniq maslahat beradi.`,
+    { buttons: [[{ text: "🎙️ Mashqni boshlash", url: `${SITE_URL}/pronounce` }]] },
+  );
+}
