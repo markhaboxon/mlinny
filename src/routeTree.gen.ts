@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DictationRouteImport } from './routes/dictation'
 import { Route as DuelRouteImport } from './routes/duel'
 import { Route as GroupRouteImport } from './routes/group'
 import { Route as IeltsRouteImport } from './routes/ielts'
@@ -42,6 +43,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DictationRoute = DictationRouteImport.update({
+  id: '/dictation',
+  path: '/dictation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DuelRoute = DuelRouteImport.update({
@@ -159,6 +165,7 @@ const ApiPublicTelegramWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dictation': typeof DictationRoute
   '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dictation': typeof DictationRoute
   '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dictation': typeof DictationRoute
   '/duel': typeof DuelRoute
   '/group': typeof GroupRoute
   '/ielts': typeof IeltsRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/dictation'
     | '/duel'
     | '/group'
     | '/ielts'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/dictation'
     | '/duel'
     | '/group'
     | '/ielts'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/dictation'
     | '/duel'
     | '/group'
     | '/ielts'
@@ -319,6 +331,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DictationRoute: typeof DictationRoute
   DuelRoute: typeof DuelRoute
   GroupRoute: typeof GroupRoute
   IeltsRoute: typeof IeltsRoute
@@ -357,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dictation': {
+      id: '/dictation'
+      path: '/dictation'
+      fullPath: '/dictation'
+      preLoaderRoute: typeof DictationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/duel': {
@@ -519,6 +539,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DictationRoute: DictationRoute,
   DuelRoute: DuelRoute,
   GroupRoute: GroupRoute,
   IeltsRoute: IeltsRoute,
