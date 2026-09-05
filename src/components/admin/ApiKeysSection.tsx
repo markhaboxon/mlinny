@@ -17,15 +17,18 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 /** Admin: umumiy bazadagi barcha API kalitlar bo'yicha to'liq hisobot. */
-export default function ApiKeysSection() {
+export default function ApiKeysSection({ enabled = true }: { enabled?: boolean }) {
   const qc = useQueryClient();
   const reportFn = useServerFn(adminKeysReport);
   const toggleFn = useServerFn(adminToggleKey);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["admin-keys"],
     queryFn: () => reportFn(),
-    refetchInterval: 20000,
+    enabled,
+    retry: false,
+    throwOnError: false,
+    refetchInterval: enabled ? 20000 : false,
   });
 
   const mut = useMutation({
