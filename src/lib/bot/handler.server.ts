@@ -1378,3 +1378,27 @@ async function pronounceCard(u: BotUser) {
     { buttons: [[{ text: "🎙️ Mashqni boshlash", url: `${SITE_URL}/pronounce` }]] },
   );
 }
+
+async function dictationCard(u: BotUser) {
+  await sendMessage(
+    u.chatId,
+    `🎧 <b>Diktant</b>\n\nJumlani tinglaysiz va eshitganingizni yozasiz. Har bir so'z alohida tekshiriladi, xatolar "Zaif joylarim" bo'limiga tushadi.\n\nBu mashq tinglab tushunish va imloni bir vaqtda kuchaytiradi.`,
+    { buttons: [[{ text: "🎧 Diktantni boshlash", url: `${SITE_URL}/dictation` }]] },
+  );
+}
+
+async function grammarCard(u: BotUser) {
+  await sendMessage(
+    u.chatId,
+    `📚 <b>Grammatika darslari</b>\n\n15 ta asosiy mavzu: Present Simple'dan Passive Voice va Conditionals'gacha.\n\nHar bir dars — o'zbekcha sodda tushuntirish, misollar, ko'p uchraydigan xatolar va 5 savollik mini test (XP beradi).`,
+    { buttons: [[{ text: "📚 Darsni ochish", url: `${SITE_URL}/grammar` }]] },
+  );
+}
+
+async function tutorCard(u: BotUser) {
+  await sendMessage(
+    u.chatId,
+    `💬 <b>AI suhbatdosh ustoz</b>\n\nKafeda, do'konda, shifokorda, ish suhbatida yoki IELTS Speaking uslubida ingliz tilida gaplashing.\n\nAI javob beradi, xatolaringizni tuzatadi, tarjima qiladi va nima deyish mumkinligini taklif qiladi.`,
+    { buttons: [[{ text: "💬 Suhbatni boshlash", url: `${SITE_URL}/tutor` }]] },
+  );
+}
