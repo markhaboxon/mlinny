@@ -1094,6 +1094,9 @@ async function handleCallback(cb: TgCallback) {
   if (data === "duel") return duelCard(u);
   if (data === "review") return reviewCard(u);
   if (data === "pronounce") return pronounceCard(u);
+  if (data === "dictation") return dictationCard(u);
+  if (data === "grammar") return grammarCard(u);
+  if (data === "tutor") return tutorCard(u);
   if (data === "sentence") return sentenceTask(u);
   if (data === "students") return teacherOnly(u, () => students(u));
   if (data === "report") return teacherOnly(u, () => report(u));
