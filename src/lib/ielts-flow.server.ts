@@ -132,10 +132,11 @@ export async function startObjective(
       ? [1, 2, 3, 4]
       : [1, 2, 3];
 
-  await consumeQuota(userId, `ielts_${skill}_start`, 12);
-
   const materials = [];
   for (const s of sections) materials.push(await getMaterial(skill, variant, s, userId));
+
+  // Only a successfully prepared test consumes the user's daily allowance.
+  await consumeQuota(userId, `ielts_${skill}_start`, 12);
 
   const db = await admin();
   const { data: session, error } = await db

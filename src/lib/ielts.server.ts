@@ -105,6 +105,7 @@ async function generateListening(section: number, variant: IeltsVariant, userId?
   const gw = getGateway(userId);
   const { output } = await generateText({
     model: gw(AI_MODEL),
+    maxRetries: 0,
     output: Output.object({ schema: ListeningSchema }),
     prompt: `You are an official IELTS test writer. Create ONE authentic IELTS Listening section in British English.
 ${LISTENING_BRIEF[section]}
@@ -127,6 +128,7 @@ async function generateReading(section: number, variant: IeltsVariant, userId?: 
   const count = section === 3 ? 14 : 13;
   const { output } = await generateText({
     model: gw(AI_MODEL),
+    maxRetries: 0,
     output: Output.object({ schema: ReadingSchema }),
     prompt: `You are an official IELTS test writer. Create ONE authentic IELTS Reading passage in British English.
 ${READING_BRIEF[section]}
@@ -185,10 +187,29 @@ export async function getMaterial(
     }
   }
 
-  const generated =
-    kind === "listening"
-      ? await generateListening(section, variant, userId)
-      : await generateReading(section, variant, userId);
+  let generated: StoredMaterial["payload"];
+  let source = "ai";
+  try {
+    generated =
+      kind === "listening"
+        ? await generateListening(section, variant, userId)
+        : await generateReading(section, variant, userId);
+  } catch (error) {
+    // A temporary upstream outage must not make the whole test unusable. The
+    // vetted fallback remains server-side, including its answer key, and is
+    // cached in the same bank so subsequent starts need no AI request.
+    const { fallbackListening, fallbackReading } = await import("./ielts-fallback.server");
+    generated =
+      kind === "listening"
+        ? fallbackListening(section, variant)
+        : fallbackReading(section, variant);
+    source = "fallback";
+    console.warn("IELTS AI material generation failed; using fallback", {
+      kind,
+      section,
+      message: error instanceof Error ? error.message : "Unknown AI error",
+    });
+  }
 
   const payload = { ...generated, questions: generated.questions } as StoredMaterial["payload"];
   const { data: inserted, error } = await db
@@ -199,7 +220,7 @@ export async function getMaterial(
       section,
       title: generated.title,
       payload: payload as never,
-      source: "ai",
+      source,
       uses: 1,
     })
     .select("id, kind, section, title, payload")
