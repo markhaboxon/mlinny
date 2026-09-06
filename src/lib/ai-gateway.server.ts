@@ -190,52 +190,72 @@ function createRotatingFetch(userId?: string): typeof fetch {
     }
 
     let lastMessage = "";
-    for (const key of order) {
-      const headers = new Headers(init?.headers);
-      headers.set("Authorization", `Bearer ${key}`);
-      let res: Response;
-      try {
-        res = await fetch(input, { ...init, headers });
-      } catch (e) {
-        lastMessage = e instanceof Error ? e.message : String(e);
-        continue;
+    let overloaded = false;
+    // Gemini 503 ("model is overloaded") is transient: retry the whole key
+    // order a few times with growing backoff before giving up.
+    const ROUNDS = 3;
+    for (let round = 0; round < ROUNDS; round++) {
+      if (round > 0) {
+        const { order: fresh } = await orderedKeys(userId);
+        if (fresh.length) order.splice(0, order.length, ...fresh);
+        await new Promise((r) => setTimeout(r, 1200 * round + Math.random() * 400));
+      }
+      overloaded = false;
+
+      for (const key of order) {
+        const headers = new Headers(init?.headers);
+        headers.set("Authorization", `Bearer ${key}`);
+        let res: Response;
+        try {
+          res = await fetch(input, { ...init, headers });
+        } catch (e) {
+          lastMessage = e instanceof Error ? e.message : String(e);
+          continue;
+        }
+
+        if (res.ok) {
+          cooldown.delete(key);
+          void recordOk(key);
+          return res;
+        }
+
+        const message = await parseError(res);
+        lastMessage = message;
+
+        if (res.status === 429 || /quota|resource_exhausted|rate limit/i.test(message)) {
+          markKeyExhausted(key);
+          void recordError(key, message || "Limit tugadi (429)", Date.now() + RATE_LIMIT_COOLDOWN_MS);
+          continue; // try the next key
+        }
+        if (res.status === 401 || res.status === 403) {
+          markKeyExhausted(key, INVALID_KEY_COOLDOWN_MS);
+          void recordError(
+            key,
+            message || `Kalit qabul qilinmadi (${res.status})`,
+            Date.now() + INVALID_KEY_COOLDOWN_MS,
+          );
+          continue; // bad/expired key — skip it and try another
+        }
+
+        if (res.status === 402) {
+          throw new Error("Gemini hisobida to'lov muammosi bor.");
+        }
+        if (res.status >= 500) {
+          // Transient Gemini overload (503) — short pause, then try the next key.
+          overloaded = true;
+          lastMessage = message || `Server vaqtincha band (${res.status})`;
+          await new Promise((r) => setTimeout(r, 700));
+          continue;
+        }
+        throw new Error(`AI xatosi (${res.status}): ${message || "noma'lum"}`);
       }
 
-      if (res.ok) {
-        cooldown.delete(key);
-        void recordOk(key);
-        return res;
-      }
-
-      const message = await parseError(res);
-      lastMessage = message;
-
-      if (res.status === 429 || /quota|resource_exhausted|rate limit/i.test(message)) {
-        markKeyExhausted(key);
-        void recordError(key, message || "Limit tugadi (429)", Date.now() + RATE_LIMIT_COOLDOWN_MS);
-        continue; // try the next key
-      }
-      if (res.status === 401 || res.status === 403) {
-        markKeyExhausted(key, INVALID_KEY_COOLDOWN_MS);
-        void recordError(key, message || `Kalit qabul qilinmadi (${res.status})`, Date.now() + INVALID_KEY_COOLDOWN_MS);
-        continue; // bad/expired key — skip it and try another
-      }
-
-      if (res.status === 402) {
-        throw new Error("Gemini hisobida to'lov muammosi bor.");
-      }
-      if (res.status >= 500) {
-        // Transient Gemini overload (503) — short pause, then try the next key.
-        lastMessage = message || `Server vaqtincha band (${res.status})`;
-        await new Promise((r) => setTimeout(r, 700));
-        continue;
-      }
-      throw new Error(`AI xatosi (${res.status}): ${message || "noma'lum"}`);
+      if (!overloaded) break; // nothing left to gain from another round
     }
 
     if (lastMessage && !/quota|resource_exhausted|rate limit/i.test(lastMessage)) {
       throw new Error(
-        "Gemini serveri hozir juda band (503). Iltimos, 10-20 soniyadan keyin qayta urinib ko'ring.",
+        "Gemini serveri hozir juda band. Iltimos, 10-20 soniyadan keyin qayta urinib ko'ring.",
       );
     }
 
@@ -244,6 +264,7 @@ function createRotatingFetch(userId?: string): typeof fetch {
     );
   };
 }
+
 
 // Gemini exposes an OpenAI-compatible endpoint at
 // https://generativelanguage.googleapis.com/v1beta/openai/
