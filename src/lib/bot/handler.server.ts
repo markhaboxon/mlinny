@@ -484,6 +484,9 @@ function helpText(u: BotUser) {
 /duel — 1:1 bellashuv
 /review — aqlli takrorlash (SRS) kartalari
 /pronounce — talaffuz mashqi
+/dictation — diktant (eshitib yozish)
+/grammar — grammatika darslari va test
+/tutor — AI suhbatdosh bilan gaplashish
 /ask — AI'dan istalgan savol
 /settings — kunlik yuborish vaqti va eslatmalar
 /menu — asosiy menyu`;
