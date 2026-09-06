@@ -318,6 +318,11 @@ function mainMenu(u: BotUser): Button[][] {
       { text: "🃏 Takrorlash", callback_data: "review" },
       { text: "🎙️ Talaffuz", callback_data: "pronounce" },
     ],
+    [
+      { text: "🎧 Diktant", callback_data: "dictation" },
+      { text: "📚 Grammatika", callback_data: "grammar" },
+    ],
+    [{ text: "💬 AI suhbatdosh", callback_data: "tutor" }],
     [{ text: "🌐 Saytga o'tish", url: SITE_URL }],
   ];
 }
