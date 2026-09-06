@@ -377,6 +377,12 @@ async function handleCommand(u: BotUser, text: string) {
       return reviewCard(u);
     case "/pronounce":
       return pronounceCard(u);
+    case "/dictation":
+      return dictationCard(u);
+    case "/grammar":
+      return grammarCard(u);
+    case "/tutor":
+      return tutorCard(u);
     case "/sentence":
       return sentenceTask(u);
     case "/ask":
