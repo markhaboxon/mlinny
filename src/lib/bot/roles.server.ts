@@ -19,6 +19,9 @@ export const STUDENT_COMMANDS = [
   { command: "duel", description: "Do'st bilan duel" },
   { command: "review", description: "Aqlli takrorlash (SRS)" },
   { command: "pronounce", description: "Talaffuz mashqi" },
+  { command: "dictation", description: "Diktant — eshitib yozish" },
+  { command: "grammar", description: "Grammatika darslari" },
+  { command: "tutor", description: "AI suhbatdosh ustoz" },
   { command: "ask", description: "AI'dan savol so'rash" },
   { command: "settings", description: "Sozlamalar" },
   { command: "profile", description: "Mening hisobim" },
@@ -70,6 +73,9 @@ const STUDENT_ONLY = new Set([
   "/duel",
   "/review",
   "/pronounce",
+  "/dictation",
+  "/grammar",
+  "/tutor",
   "/settings",
 ]);
 const TEACHER_ONLY = new Set([

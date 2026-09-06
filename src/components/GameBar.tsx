@@ -64,6 +64,15 @@ export default function GameBar() {
         <Link to="/pronounce" className="btn-ghost text-sm text-center">
           🎙️ Talaffuz
         </Link>
+        <Link to="/dictation" className="btn-ghost text-sm text-center">
+          🎧 Diktant
+        </Link>
+        <Link to="/grammar" className="btn-ghost text-sm text-center">
+          📚 Grammatika
+        </Link>
+        <Link to="/tutor" className="btn-ghost text-sm text-center">
+          💬 Suhbat
+        </Link>
       </div>
       <Link to="/ielts" className="btn-ghost text-sm text-center mt-2 block">
         🎓 IELTS bo'limi

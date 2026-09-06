@@ -318,6 +318,11 @@ function mainMenu(u: BotUser): Button[][] {
       { text: "🃏 Takrorlash", callback_data: "review" },
       { text: "🎙️ Talaffuz", callback_data: "pronounce" },
     ],
+    [
+      { text: "🎧 Diktant", callback_data: "dictation" },
+      { text: "📚 Grammatika", callback_data: "grammar" },
+    ],
+    [{ text: "💬 AI suhbatdosh", callback_data: "tutor" }],
     [{ text: "🌐 Saytga o'tish", url: SITE_URL }],
   ];
 }
@@ -372,6 +377,12 @@ async function handleCommand(u: BotUser, text: string) {
       return reviewCard(u);
     case "/pronounce":
       return pronounceCard(u);
+    case "/dictation":
+      return dictationCard(u);
+    case "/grammar":
+      return grammarCard(u);
+    case "/tutor":
+      return tutorCard(u);
     case "/sentence":
       return sentenceTask(u);
     case "/ask":
@@ -473,6 +484,9 @@ function helpText(u: BotUser) {
 /duel — 1:1 bellashuv
 /review — aqlli takrorlash (SRS) kartalari
 /pronounce — talaffuz mashqi
+/dictation — diktant (eshitib yozish)
+/grammar — grammatika darslari va test
+/tutor — AI suhbatdosh bilan gaplashish
 /ask — AI'dan istalgan savol
 /settings — kunlik yuborish vaqti va eslatmalar
 /menu — asosiy menyu`;
@@ -1080,6 +1094,9 @@ async function handleCallback(cb: TgCallback) {
   if (data === "duel") return duelCard(u);
   if (data === "review") return reviewCard(u);
   if (data === "pronounce") return pronounceCard(u);
+  if (data === "dictation") return dictationCard(u);
+  if (data === "grammar") return grammarCard(u);
+  if (data === "tutor") return tutorCard(u);
   if (data === "sentence") return sentenceTask(u);
   if (data === "students") return teacherOnly(u, () => students(u));
   if (data === "report") return teacherOnly(u, () => report(u));
@@ -1359,5 +1376,29 @@ async function pronounceCard(u: BotUser) {
         : "Hali urinishlar yo'q — birinchi mashqingizni boshlang!"
     }\n\nJumlani eshiting, mikrofon orqali ayting — AI har bir tovushni tahlil qilib, aniq maslahat beradi.`,
     { buttons: [[{ text: "🎙️ Mashqni boshlash", url: `${SITE_URL}/pronounce` }]] },
+  );
+}
+
+async function dictationCard(u: BotUser) {
+  await sendMessage(
+    u.chatId,
+    `🎧 <b>Diktant</b>\n\nJumlani tinglaysiz va eshitganingizni yozasiz. Har bir so'z alohida tekshiriladi, xatolar "Zaif joylarim" bo'limiga tushadi.\n\nBu mashq tinglab tushunish va imloni bir vaqtda kuchaytiradi.`,
+    { buttons: [[{ text: "🎧 Diktantni boshlash", url: `${SITE_URL}/dictation` }]] },
+  );
+}
+
+async function grammarCard(u: BotUser) {
+  await sendMessage(
+    u.chatId,
+    `📚 <b>Grammatika darslari</b>\n\n15 ta asosiy mavzu: Present Simple'dan Passive Voice va Conditionals'gacha.\n\nHar bir dars — o'zbekcha sodda tushuntirish, misollar, ko'p uchraydigan xatolar va 5 savollik mini test (XP beradi).`,
+    { buttons: [[{ text: "📚 Darsni ochish", url: `${SITE_URL}/grammar` }]] },
+  );
+}
+
+async function tutorCard(u: BotUser) {
+  await sendMessage(
+    u.chatId,
+    `💬 <b>AI suhbatdosh ustoz</b>\n\nKafeda, do'konda, shifokorda, ish suhbatida yoki IELTS Speaking uslubida ingliz tilida gaplashing.\n\nAI javob beradi, xatolaringizni tuzatadi, tarjima qiladi va nima deyish mumkinligini taklif qiladi.`,
+    { buttons: [[{ text: "💬 Suhbatni boshlash", url: `${SITE_URL}/tutor` }]] },
   );
 }

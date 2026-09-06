@@ -21,6 +21,7 @@ import { Route as PronounceRouteImport } from './routes/pronounce'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as StoryRouteImport } from './routes/story'
+import { Route as TutorRouteImport } from './routes/tutor'
 import { Route as WriteRouteImport } from './routes/write'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSetupRouteImport } from './routes/admin/setup'
@@ -94,6 +95,11 @@ const ShopRoute = ShopRouteImport.update({
 const StoryRoute = StoryRouteImport.update({
   id: '/story',
   path: '/story',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorRoute = TutorRouteImport.update({
+  id: '/tutor',
+  path: '/tutor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WriteRoute = WriteRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/review': typeof ReviewRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
+  '/tutor': typeof TutorRoute
   '/write': typeof WriteRoute
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/review': typeof ReviewRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
+  '/tutor': typeof TutorRoute
   '/write': typeof WriteRoute
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/review': typeof ReviewRoute
   '/shop': typeof ShopRoute
   '/story': typeof StoryRoute
+  '/tutor': typeof TutorRoute
   '/write': typeof WriteRoute
   '/admin/setup': typeof AdminSetupRoute
   '/enter/$token': typeof EnterTokenRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/review'
     | '/shop'
     | '/story'
+    | '/tutor'
     | '/write'
     | '/admin/setup'
     | '/enter/$token'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/review'
     | '/shop'
     | '/story'
+    | '/tutor'
     | '/write'
     | '/admin/setup'
     | '/enter/$token'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/review'
     | '/shop'
     | '/story'
+    | '/tutor'
     | '/write'
     | '/admin/setup'
     | '/enter/$token'
@@ -353,6 +365,7 @@ export interface RootRouteChildren {
   ReviewRoute: typeof ReviewRoute
   ShopRoute: typeof ShopRoute
   StoryRoute: typeof StoryRoute
+  TutorRoute: typeof TutorRoute
   WriteRoute: typeof WriteRoute
   AdminSetupRoute: typeof AdminSetupRoute
   EnterTokenRoute: typeof EnterTokenRoute
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       path: '/story'
       fullPath: '/story'
       preLoaderRoute: typeof StoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutor': {
+      id: '/tutor'
+      path: '/tutor'
+      fullPath: '/tutor'
+      preLoaderRoute: typeof TutorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/write': {
@@ -569,6 +589,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReviewRoute: ReviewRoute,
   ShopRoute: ShopRoute,
   StoryRoute: StoryRoute,
+  TutorRoute: TutorRoute,
   WriteRoute: WriteRoute,
   AdminSetupRoute: AdminSetupRoute,
   EnterTokenRoute: EnterTokenRoute,
