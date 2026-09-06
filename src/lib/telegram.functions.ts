@@ -71,7 +71,13 @@ export const setupTelegramWebhook = createServerFn({ method: "POST" })
     await requireKind(context.userId, ["admin"]);
     const { setWebhook, getWebhookInfo, setCommands } = await import("./telegram.server");
 
-    const url = `${data.origin.replace(/\/$/, "")}/api/public/telegram/webhook`;
+    // The editor preview host (id-preview--<id>.lovable.app) is behind Lovable's
+    // own auth, so Telegram gets 401 there. Always register a publicly reachable
+    // host: the stable dev host for preview builds, or the published site.
+    let origin = data.origin.replace(/\/$/, "");
+    const previewMatch = /^https:\/\/id-preview--([0-9a-f-]+)\.lovable\.app$/i.exec(origin);
+    if (previewMatch) origin = `https://project--${previewMatch[1]}-dev.lovable.app`;
+    const url = `${origin}/api/public/telegram/webhook`;
     const ok = await setWebhook(url);
     await setCommands([
       { command: "start", description: "Boshlash / hisobni ulash" },
